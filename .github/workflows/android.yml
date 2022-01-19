@@ -37,9 +37,7 @@ jobs:
           java-version: 11
 
       - name: Build app
-        uses: gradle/gradle-command-action@v2
-        with:
-          arguments: assembleRelease
+        run: bash ./gradlew assembleRelease
 
       - name: Create Release
         uses: actions/upload-artifact@v2
