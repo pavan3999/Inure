@@ -11,12 +11,14 @@ object AppearancePreferences {
     private const val appCornerRadius = "corner_radius"
     private const val iconShadows = "icon_shadows"
     private const val lastDarkTheme = "last_dark_theme"
+    private const val coloredIconShadows = "icon_shadows_colored"
 
     const val theme = "current_app_theme"
     const val accentColor = "app_accent_color"
     const val appFont = "type_face"
     const val accentOnNav = "accent_color_on_nav_bar"
     const val transparentStatus = "is_transparent_status_disabled"
+    const val iconSize = "app_icon_size"
 
     // ---------------------------------------------------------------------------------------------------------- //
 
@@ -104,5 +106,25 @@ object AppearancePreferences {
 
     fun isTransparentStatusDisabled(): Boolean {
         return getSharedPreferences().getBoolean(transparentStatus, false)
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- //
+
+    fun setIconSize(@IntRange(from = 50, to = 600) size: Int) {
+        getSharedPreferences().edit().putInt(iconSize, size).apply()
+    }
+
+    fun getIconSize(): Int {
+        return getSharedPreferences().getInt(iconSize, 400)
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- //
+
+    fun setColoredIconShadowsState(boolean: Boolean) {
+        getSharedPreferences().edit().putBoolean(coloredIconShadows, boolean).apply()
+    }
+
+    fun getColoredIconShadows(): Boolean {
+        return getSharedPreferences().getBoolean(coloredIconShadows, true)
     }
 }

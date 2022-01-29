@@ -1,5 +1,6 @@
 package app.simple.inure.ui.app
 
+import android.content.Intent
 import android.content.pm.PackageInfo
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.doOnPreDraw
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.viewModels
@@ -27,7 +29,11 @@ import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.extension.popup.PopupMenuCallback
 import app.simple.inure.popups.app.PopupHome
 import app.simple.inure.popups.app.PopupMainList
-import app.simple.inure.ui.panels.*
+import app.simple.inure.terminal.Term
+import app.simple.inure.ui.panels.DeviceInformation
+import app.simple.inure.ui.panels.Search
+import app.simple.inure.ui.panels.Sensors
+import app.simple.inure.ui.panels.Statistics
 import app.simple.inure.ui.preferences.mainscreens.MainPreferencesScreen
 import app.simple.inure.ui.viewers.Information
 import app.simple.inure.ui.viewers.MostUsed
@@ -77,7 +83,7 @@ class Home : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        homeViewModel.getRecentApps().observe(viewLifecycleOwner, {
+        homeViewModel.getRecentApps().observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
             val adapter = AdapterHomeRecentlyInstalled(it)
@@ -97,9 +103,9 @@ class Home : ScopedFragment() {
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()
             }
-        })
+        }
 
-        homeViewModel.getUpdatedApps().observe(viewLifecycleOwner, {
+        homeViewModel.getUpdatedApps().observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
             val adapter = AdapterHomeRecentlyUpdated(it)
@@ -119,9 +125,9 @@ class Home : ScopedFragment() {
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()
             }
-        })
+        }
 
-        homeViewModel.frequentlyUsed.observe(viewLifecycleOwner, {
+        homeViewModel.frequentlyUsed.observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
             val adapterHomeFrequentlyUsed = AdapterHomeFrequentlyUsed(it)
@@ -141,9 +147,9 @@ class Home : ScopedFragment() {
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()
             }
-        })
+        }
 
-        homeViewModel.getMenuItems().observe(viewLifecycleOwner, {
+        homeViewModel.getMenuItems().observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
             navigationRecyclerView.layoutManager = GridLayoutManager(requireContext(), getInteger(R.integer.span_count))
@@ -163,19 +169,19 @@ class Home : ScopedFragment() {
                             Toast.makeText(requireContext(), "Not implemented yet", Toast.LENGTH_SHORT).show()
                         }
                         getString(R.string.terminal) -> {
-                            FragmentHelper.openFragment(
-                                    requireActivity().supportFragmentManager,
-                                    Terminal.newInstance(), icon, "terminal")
+                            val intent = Intent(requireContext(), Term::class.java)
+                            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(requireActivity(), icon, icon.transitionName)
+                            startActivity(intent, options.toBundle())
                         }
                         getString(R.string.usage_statistics) -> {
                             FragmentHelper.openFragment(
                                     requireActivity().supportFragmentManager,
                                     Statistics.newInstance(), icon, "stats")
                         }
-                        getString(R.string.device_stats) -> {
+                        getString(R.string.device_info) -> {
                             FragmentHelper.openFragment(
                                     requireActivity().supportFragmentManager,
-                                    DeviceInfo.newInstance(), icon, "info")
+                                    DeviceInformation.newInstance(), icon, "info")
                         }
                         getString(R.string.sensors) -> {
                             FragmentHelper.openFragment(
@@ -194,7 +200,7 @@ class Home : ScopedFragment() {
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()
             }
-        })
+        }
 
         search.setOnClickListener {
             clearTransitions()

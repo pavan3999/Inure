@@ -10,12 +10,17 @@ import androidx.lifecycle.AndroidViewModel;
 import app.simple.inure.util.ContextUtils;
 
 public class WrappedViewModel extends AndroidViewModel {
+    
     public WrappedViewModel(@NonNull Application application) {
         super(application);
     }
     
     public final Context getContext() {
         return ContextUtils.Companion.updateLocale(getApplication().getApplicationContext(), "en");
+    }
+    
+    public final Context applicationContext() {
+        return getApplication().getApplicationContext();
     }
     
     public final String getString(int id) {

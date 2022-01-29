@@ -9,6 +9,7 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/afs_track.xml" value="0.2523076923076923" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ani_ic_app_icon.xml" value="0.25625" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ani_ic_settings.xml" value="0.25625" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/close_background.xml" value="0.1415" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/fs_popup_background.xml" value="0.2523076923076923" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_android.xml" value="0.25625" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_app_icon.xml" value="0.25625" />
@@ -21,6 +22,11 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_arrow_right.xml" value="0.25625" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_arrow_right_tiny.xml" value="0.2523076923076923" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_backup.xml" value="0.25625" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_battery.xml" value="0.25092592592592594" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_battery_3.xml" value="0.25092592592592594" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_battery_4.xml" value="0.25092592592592594" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_battery_5.xml" value="0.25092592592592594" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_battery_6.xml" value="0.25092592592592594" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_check.xml" value="0.2523076923076923" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_dot_tiny.xml" value="0.2523076923076923" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_layers.xml" value="0.25625" />
@@ -38,6 +44,8 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_smartphone.xml" value="0.25625" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_still_loader.xml" value="0.25625" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_telegram.xml" value="0.25625" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_terminal.xml" value="0.1415" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_terminal_black.xml" value="0.1415" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_thumb.xml" value="0.2523076923076923" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_thumb_.xml" value="0.2523076923076923" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/drawable/ic_warning_tiny.xml" value="0.2523076923076923" />
@@ -50,9 +58,11 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout-land/popup_sorting_style.xml" value="0.18541666666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout-land/popup_usage_stats_interval.xml" value="0.21875" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout-land/popup_usage_stats_sorting.xml" value="0.18541666666666667" />
-        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/activity_image.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/activity_image.xml" value="0.18981481481481483" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/activity_main.xml" value="0.21203703703703702" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/activity_pdf_viewer.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/activity_terminal.xml" value="0.2" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/activity_terminal_window_list.xml" value="0.21944444444444444" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/activity_text.xml" value="0.1" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_accent.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_accent_color_header.xml" value="0.24010416666666667" />
@@ -63,13 +73,16 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_all_apps_header.xml" value="0.2364102564102564" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_all_apps_small_details.xml" value="0.2364102564102564" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_app_info_menu.xml" value="0.22407407407407406" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_device_info_heading.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_device_info_items.xml" value="0.2101851851851852" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_device_info_panels.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_dex_data.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_extras_filter.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_features.xml" value="0.2364102564102564" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_graphics.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_header_accent_color.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_header_all_apps.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_header_device_info.xml" value="0.22" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_header_sensors.xml" value="0.424408014571949" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_header_typeface.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_header_usage_stats.xml" value="0.23055555555555557" />
@@ -91,6 +104,7 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_typeface_header.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_usage_stats.xml" value="0.2364102564102564" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_usage_stats_header.xml" value="0.2" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/adapter_windows.xml" value="0.21944444444444444" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/analytics_apps.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/analytics_device.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/analytics_ram.xml" value="0.24010416666666667" />
@@ -99,6 +113,8 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/configuration_information.xml" value="0.22" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/configuration_root.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dalog_activity_launcher.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/device_info_battery.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/device_info_device.xml" value="0.20833333333333334" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/device_info_system.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_app_corner.xml" value="0.21666666666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_audio_player.xml" value="0.22685185185185186" />
@@ -112,6 +128,7 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_extract.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_force_stop.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_html.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_icon_resize.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_intent_action.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_main_settings.xml" value="0.2" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_permission_status.xml" value="0.24010416666666667" />
@@ -119,6 +136,7 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_search_menu.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_send_prepare.xml" value="0.22962962962962963" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_shell_executor.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_special_keys.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_telegram.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_uninstaller.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/dialog_usage_settings.xml" value="0.25" />
@@ -132,13 +150,14 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_activity_details.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_all_apps.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_app_info.xml" value="0.24010416666666667" />
-        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_appearances.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_appearances.xml" value="0.20555555555555555" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_behaviour.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_certificate.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_code_viewer.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_color_accent.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_configuration.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_device_info.xml" value="0.20462962962962963" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_device_information.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_dex_data.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_directories.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/fragment_extras.xml" value="0.2364102564102564" />
@@ -192,8 +211,9 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_activities_menu.xml" value="0.25" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_analytics.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_app_panels.xml" value="0.24010416666666667" />
-        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_application_theme.xml" value="1.0" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_application_theme.xml" value="0.18796296296296297" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_apps_category.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_back_button_action.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_data_interval.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_extras_filter.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_extras_options.xml" value="0.24010416666666667" />
@@ -215,17 +235,26 @@
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_sorting_style.xml" value="0.225" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_sure.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_terminal_menu.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_terminal_session.xml" value="0.21944444444444444" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_usage_stats_filter.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_usage_stats_interval.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_usage_stats_sorting.xml" value="0.2364102564102564" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/popup_xml_viewer_menu.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/preferences_shell.xml" value="0.175" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/preferences_terminal.xml" value="0.22" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/radio_button_view.xml" value="0.5" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/search_view.xml" value="0.225" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/sub_app_header.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/sub_app_options.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/sub_graph_view.xml" value="0.24010416666666667" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/switch_view.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/term_activity.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/terminal_font_size.xml" value="0.175" />
         <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/usage_stats_sorting.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/window_list_item.xml" value="0.22" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/layout/window_list_new_window.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/menu/main.xml" value="0.24010416666666667" />
+        <entry key="..\:/Android_Apps/Inure/app/src/main/res/xml/preferences.xml" value="0.25" />
       </map>
     </option>
   </component>

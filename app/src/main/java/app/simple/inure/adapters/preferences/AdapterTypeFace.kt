@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import app.simple.inure.R
 import app.simple.inure.decorations.overscroll.RecyclerViewConstants
 import app.simple.inure.decorations.overscroll.VerticalListViewHolder
+import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.interfaces.adapters.AdapterTypeFaceCallbacks
 import app.simple.inure.preferences.AppearancePreferences
 import app.simple.inure.themes.manager.ThemeManager
@@ -89,7 +90,7 @@ class AdapterTypeFace : RecyclerView.Adapter<VerticalListViewHolder>() {
     }
 
     inner class Holder(itemView: View) : VerticalListViewHolder(itemView) {
-        val textView: TextView = itemView.findViewById(R.id.adapter_typeface_textview)
+        val textView: TypeFaceTextView = itemView.findViewById(R.id.adapter_typeface_textview)
         val icon: ImageView = itemView.findViewById(R.id.adapter_typeface_check_icon)
         val container: LinearLayout = itemView.findViewById(R.id.adapter_typeface_container)
     }
