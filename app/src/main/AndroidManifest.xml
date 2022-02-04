@@ -23,19 +23,18 @@
         android:name="inure.terminal.permission.RUN_SCRIPT"
         android:description="@string/permdesc_run_script"
         android:label="@string/perm_run_script"
-        android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
         android:protectionLevel="dangerous" />
+
     <permission
         android:name="inure.terminal.permission.APPEND_TO_PATH"
         android:description="@string/permdesc_append_to_path"
         android:label="@string/perm_append_to_path"
-        android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
         android:protectionLevel="dangerous" />
+
     <permission
         android:name="inure.terminal.permission.PREPEND_TO_PATH"
         android:description="@string/permdesc_prepend_to_path"
         android:label="@string/perm_prepend_to_path"
-        android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
         android:protectionLevel="dangerous" />
 
     <application
@@ -63,16 +62,17 @@
 
         <activity
             android:name=".terminal.Term"
-            android:configChanges="keyboard|keyboardHidden|orientation"
+            android:configChanges="uiMode|keyboard|keyboardHidden|orientation"
             android:exported="true"
+            android:documentLaunchMode="intoExisting"
             android:label="@string/terminal"
-            android:windowSoftInputMode="adjustResize|stateAlwaysVisible" />
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".terminal.TermPreferences"
+            android:name=".activities.preferences.PreferenceActivity"
             android:documentLaunchMode="intoExisting"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
+            android:configChanges="uiMode"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
@@ -245,6 +245,23 @@
             android:name=".terminal.TermService"
             android:enabled="true"
             android:exported="false" />
+
+        <activity-alias
+            android:name=".activities.alias.TerminalAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_terminal"
+            android:label="@string/terminal"
+            android:roundIcon="@mipmap/ic_terminal_round"
+            android:targetActivity=".terminal.Term">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
     </application>
 
     <queries>

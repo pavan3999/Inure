@@ -22,6 +22,7 @@ import android.util.DisplayMetrics;
 import app.simple.inure.decorations.emulatorview.ColorScheme;
 import app.simple.inure.decorations.emulatorview.EmulatorView;
 import app.simple.inure.decorations.emulatorview.TermSession;
+import app.simple.inure.preferences.ShellPreferences;
 import app.simple.inure.preferences.TerminalPreferences;
 import app.simple.inure.terminal.util.TermSettings;
 import app.simple.inure.themes.manager.ThemeManager;
@@ -38,7 +39,7 @@ public class TermView extends EmulatorView {
         }
     
         setTextSize(TerminalPreferences.INSTANCE.getFontSize());
-        setUseCookedIME(settings.useCookedIME());
+        setUseCookedIME(TerminalPreferences.INSTANCE.getInputMethod() != 0);
         setColorScheme(scheme);
         if (TerminalPreferences.INSTANCE.getColor() == 0) {
             setColorScheme(new ColorScheme(ThemeManager.INSTANCE.getTheme().getTextViewTheme().getPrimaryTextColor(),
@@ -50,10 +51,8 @@ public class TermView extends EmulatorView {
         setAltSendsEsc(TerminalPreferences.INSTANCE.getAltKeyEscapeState());
         setControlKeyCode(settings.getControlKeyCode());
         setFnKeyCode(settings.getFnKeyCode());
-        setTermType(settings.getTermType());
-        setMouseTracking(settings.getMouseTrackingFlag());
-    
-        System.out.println("Called Emu View");
+        setTermType(ShellPreferences.INSTANCE.getTerminalType());
+        setMouseTracking(ShellPreferences.INSTANCE.getMouseEventState());
     }
     
     public void updatePrefs(TermSettings settings) {

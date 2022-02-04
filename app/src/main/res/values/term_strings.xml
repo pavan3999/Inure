@@ -57,16 +57,15 @@
     <string name="summary_cursorstyle_preference">Choose cursor style.</string>
     <string name="dialog_title_cursorstyle_preference">Cursor style</string>
 
-    <string name="title_cursorblink_preference">Cursor blink</string>
-    <string name="summary_cursorblink_preference">Choose cursor blink.</string>
-    <string name="dialog_title_cursorblink_preference">Cursor blink</string>
+    <string name="title_cursorblink_preference">Cursor Blink</string>
+    <string name="summary_cursorblink_preference">Blink cursor periodically in terminal windows.</string>
 
     <string name="text_preferences">Text</string>
 
     <string name="title_utf8_by_default_preference">Default to UTF-8</string>
     <string name="summary_utf8_by_default_preference">Whether UTF-8 mode is enabled by default.</string>
 
-    <string name="title_fontsize_preference">Font size</string>
+    <string name="title_fontsize_preference">Font Size</string>
     <string name="summary_fontsize_preference">Choose character height in points.</string>
     <string name="dialog_title_fontsize_preference">Font size</string>
 
@@ -87,20 +86,16 @@
 
     <string name="title_ime_preference">Input method</string>
     <string name="summary_ime_preference">Choose input method for soft keyboard.</string>
-    <string name="dialog_title_ime_preference">Input method</string>
 
     <string name="shell_preferences">Shell</string>
     <string name="title_shell_preference">Command line</string>
     <string name="summary_shell_preference">Specify the shell command line.</string>
-    <string name="dialog_title_shell_preference">Shell</string>
 
     <string name="title_initialcommand_preference">Initial command</string>
     <string name="summary_initialcommand_preference">Sent to the shell when it starts.</string>
-    <string name="dialog_title_initialcommand_preference">Initial Command</string>
 
     <string name="title_termtype_preference">Terminal type</string>
     <string name="summary_termtype_preference">What terminal type to report to the shell.</string>
-    <string name="dialog_title_termtype_preference">Terminal type</string>
 
     <string name="title_close_window_on_process_exit_preference">Close window on exit</string>
     <string name="summary_close_window_on_process_exit_preference">Whether a window should close when its shell exits.</string>
@@ -130,11 +125,11 @@
     <string name="confirm_window_close_message">Close this window?</string>
 
     <string name="perm_run_script">Run arbitrary commands in Terminal Emulator</string>
-    <string name="permdesc_run_script">Allows application to open new windows in Terminal Emulator for Android and run commands in those windows with all of Terminal Emulator for Android\'s permissions, including access to the Internet and your SD Card.</string>
+    <string name="permdesc_run_script">Allows application to open new windows in Terminal Emulator for Android and run commands in those windows with all of Terminal Emulator\'s permissions, including access to the Internet and your SD Card.</string>
     <string name="perm_append_to_path">Add commands to Terminal Emulator</string>
-    <string name="permdesc_append_to_path">Allows application to provide additional commands (add directories to the PATH) for Terminal Emulator for Android.</string>
+    <string name="permdesc_append_to_path">Allows application to provide additional commands (add directories to the PATH) for Terminal Emulator.</string>
     <string name="perm_prepend_to_path">Override commands in Terminal Emulator</string>
-    <string name="permdesc_prepend_to_path">Allows application to override existing commands with its own versions (prepend directories to the PATH) in Terminal Emulator for Android.</string>
+    <string name="permdesc_prepend_to_path">Allows application to override existing commands with its own versions (prepend directories to the PATH) in Terminal Emulator.</string>
 
     <string name="email_transcript_chooser_title">Mail transcript using:</string>
     <string name="email_transcript_no_email_activity_found">Could not choose an email activity to send transcript.</string>
@@ -159,7 +154,7 @@
     <string name="fsnavigator_optional_enter_path">Or enter path here.</string>
     <string name="fsnavigator_change_theme">Change theme</string>
     <!-- AddShortcut.java -->
-    <string name="addshortcut_command_hint">command</string>
+    <string name="addshortcut_command_hint">Command</string>
     <string name="addshortcut_example_hint">--example=\""a\"</string>
     <string name="addshortcut_button_find_command">Find command</string>
     <string name="addshortcut_navigator_title">SELECT SHORTCUT TARGET</string>
