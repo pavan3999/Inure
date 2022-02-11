@@ -20,6 +20,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -41,7 +42,6 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import app.simple.inure.R;
 import app.simple.inure.activities.preferences.PreferenceActivity;
 import app.simple.inure.adapters.terminal.AdapterWindows;
@@ -65,8 +66,8 @@ import app.simple.inure.decorations.emulatorview.compat.ClipboardManagerCompatFa
 import app.simple.inure.decorations.emulatorview.compat.KeycodeConstants;
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton;
 import app.simple.inure.decorations.ripple.DynamicRippleTextView;
-import app.simple.inure.decorations.views.DecentViewFlipper;
 import app.simple.inure.dialogs.terminal.DialogCloseWindow;
+import app.simple.inure.dialogs.terminal.DialogContextMenu;
 import app.simple.inure.dialogs.terminal.DialogSpecialKeys;
 import app.simple.inure.extension.activities.BaseActivity;
 import app.simple.inure.extension.popup.PopupMenuCallback;
@@ -80,6 +81,7 @@ import app.simple.inure.terminal.compat.AndroidCompat;
 import app.simple.inure.terminal.util.SessionList;
 import app.simple.inure.terminal.util.TermSettings;
 import app.simple.inure.themes.interfaces.ThemeChangedListener;
+import app.simple.inure.themes.manager.ThemeManager;
 import app.simple.inure.util.NullSafety;
 import app.simple.inure.util.ThemeUtils;
 
@@ -127,11 +129,14 @@ public class Term extends BaseActivity implements UpdateCallback,
     
     private boolean mBackKeyPressed;
     
+    private static final String ACTION_CLOSE = "inure.terminal.close";
     private static final String ACTION_PATH_BROADCAST = "inure.terminal.broadcast.APPEND_TO_PATH";
     private static final String ACTION_PATH_PREPEND_BROADCAST = "inure.terminal.broadcast.PREPEND_TO_PATH";
     private static final String PERMISSION_PATH_BROADCAST = "inure.terminal.permission.APPEND_TO_PATH";
     private static final String PERMISSION_PATH_PREPEND_BROADCAST = "inure.terminal.permission.PREPEND_TO_PATH";
     private int mPendingPathBroadcasts = 0;
+    
+    private BroadcastReceiver closeBroadcastReceiver;
     
     private final BroadcastReceiver mPathReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -149,6 +154,7 @@ public class Term extends BaseActivity implements UpdateCallback,
             }
         }
     };
+    
     // Available on API 12 and later
     private static final int FLAG_INCLUDE_STOPPED_PACKAGES = 0x20;
     
@@ -395,9 +401,22 @@ public class Term extends BaseActivity implements UpdateCallback,
     
         mWifiLock = wm.createWifiLock(wifiLockMode, TermDebug.LOG_TAG);
         mHaveFullHwKeyboard = checkHaveFullHwKeyboard(getResources().getConfiguration());
-        
+    
         updatePrefs();
         mAlreadyStarted = true;
+    
+        closeBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                try {
+                    if (intent.getAction().equals(ACTION_CLOSE)) {
+                        finish();
+                    }
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
     }
     
     private String makePathFromBundle(Bundle extras) {
@@ -425,6 +444,8 @@ public class Term extends BaseActivity implements UpdateCallback,
     @Override
     protected void onStart() {
         super.onStart();
+        ThemeManager.INSTANCE.addListener(this);
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(closeBroadcastReceiver, new IntentFilter(ACTION_CLOSE));
         if (!bindService(TSIntent, mTSConnection, BIND_AUTO_CREATE)) {
             throw new IllegalStateException("Failed to bind to TermService!");
         }
@@ -458,12 +479,9 @@ public class Term extends BaseActivity implements UpdateCallback,
                 onResumeSelectWindow = -1;
             }
     
-            viewFlipper.setOnViewFlipperFlippedListener(new DecentViewFlipper.OnViewFlipperFlippedListener() {
-                @Override
-                public void onViewFlipperFlipped(View childView, int index) {
-                    if (adapterWindows != null) {
-                        currentWindow.setText(adapterWindows.getSessionTitle(index, getBaseContext()));
-                    }
+            viewFlipper.setOnViewFlipperFlippedListener((childView, index) -> {
+                if (adapterWindows != null && !termSessions.isEmpty()) {
+                    currentWindow.setText(adapterWindows.getSessionTitle(index, getBaseContext()));
                 }
             });
     
@@ -474,11 +492,11 @@ public class Term extends BaseActivity implements UpdateCallback,
     private void populateWindowList() {
         if (termSessions != null) {
             int position = viewFlipper.getDisplayedChild();
-        
+    
             if (adapterWindows == null) {
                 adapterWindows = new AdapterWindows(termSessions);
                 currentWindow.setText(adapterWindows.getSessionTitle(position, String.valueOf(position)));
-            
+        
                 adapterWindows.setOnAdapterWindowsCallbackListener(new AdapterWindows.Companion.AdapterWindowsCallback() {
                     @Override
                     public void onWindowClicked(int position) {
@@ -486,21 +504,21 @@ public class Term extends BaseActivity implements UpdateCallback,
                             if (position >= viewFlipper.getChildCount()) {
                                 viewFlipper.addView(createEmulatorView(termSessions.get(position)));
                             }
-                        
+    
                             if (mActionBarMode == TermSettings.ACTION_BAR_MODE_HIDES) {
                                 mActionBar.hide();
                             }
-                        
+    
                             viewFlipper.setDisplayedChild(position);
                             currentWindow.setText(adapterWindows.getSessionTitle(position, getBaseContext()));
                         }
-                    
+    
                         if (NullSafety.INSTANCE.isNotNull(popupTerminalWindows)) {
                             popupTerminalWindows.dismiss();
                             popupTerminalWindows = null;
                         }
                     }
-                
+            
                     @Override
                     public void onClose(int position) {
                         TermSession session = termSessions.remove(position);
@@ -522,10 +540,12 @@ public class Term extends BaseActivity implements UpdateCallback,
     @Override
     public void onDestroy() {
         super.onDestroy();
-        
+    
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
-        
+    
+        LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(closeBroadcastReceiver);
+    
         if (mStopServiceOnFinish) {
             stopService(TSIntent);
         }
@@ -567,7 +587,7 @@ public class Term extends BaseActivity implements UpdateCallback,
         emulatorView.setExtGestureListener(new EmulatorViewGestureListener(emulatorView));
         emulatorView.setOnKeyListener(mKeyListener);
         registerForContextMenu(emulatorView);
-        
+    
         return emulatorView;
     }
     
@@ -639,7 +659,7 @@ public class Term extends BaseActivity implements UpdateCallback,
         viewFlipper.onPause();
         if (termSessions != null) {
             termSessions.removeCallback(this);
-        
+    
             if (adapterWindows != null) {
                 termSessions.removeCallback(adapterWindows);
                 termSessions.removeTitleChangedListener(adapterWindows);
@@ -648,9 +668,11 @@ public class Term extends BaseActivity implements UpdateCallback,
         }
     
         viewFlipper.removeAllViews();
-        
+    
         unbindService(mTSConnection);
-        
+    
+        ThemeManager.INSTANCE.removeListener(this);
+    
         super.onStop();
     }
     
@@ -777,41 +799,31 @@ public class Term extends BaseActivity implements UpdateCallback,
     }
     
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View v,
-            ContextMenuInfo menuInfo) {
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        menu.setHeaderTitle(R.string.edit_text);
-        menu.add(0, SELECT_TEXT_ID, 0, R.string.select_text);
-        menu.add(0, COPY_ALL_ID, 0, R.string.copy_all);
-        menu.add(0, PASTE_ID, 0, R.string.paste);
-        menu.add(0, SEND_CONTROL_KEY_ID, 0, R.string.send_control_key);
-        menu.add(0, SEND_FN_KEY_ID, 0, R.string.send_fn_key);
-        if (!canPaste()) {
-            menu.getItem(PASTE_ID).setEnabled(false);
-        }
-    }
-    
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case SELECT_TEXT_ID:
-                getCurrentEmulatorView().toggleSelectingText();
-                return true;
-            case COPY_ALL_ID:
-                doCopyAll();
-                return true;
-            case PASTE_ID:
-                doPaste();
-                return true;
-            case SEND_CONTROL_KEY_ID:
-                doSendControlKey();
-                return true;
-            case SEND_FN_KEY_ID:
-                doSendFnKey();
-                return true;
-            default:
-                return super.onContextItemSelected(item);
-        }
+        DialogContextMenu dialogContextMenu = DialogContextMenu.Companion.newInstance(canPaste());
+        
+        dialogContextMenu.setOnTerminalContextMenuCallbackListener(source -> {
+            switch (source) {
+                case 0:
+                    getCurrentEmulatorView().toggleSelectingText();
+                    break;
+                case 1:
+                    doCopyAll();
+                    break;
+                case 2:
+                    doPaste();
+                    break;
+                case 3:
+                    doSendControlKey();
+                    break;
+                case 4:
+                    doSendFnKey();
+                    break;
+            }
+        });
+        
+        dialogContextMenu.show(getSupportFragmentManager(), "context_menu");
     }
     
     @Override
@@ -886,8 +898,7 @@ public class Term extends BaseActivity implements UpdateCallback,
     }
     
     private boolean canPaste() {
-        ClipboardManagerCompat clip = ClipboardManagerCompatFactory
-                .getManager(getApplicationContext());
+        ClipboardManagerCompat clip = ClipboardManagerCompatFactory.getManager(getApplicationContext());
         return clip.hasText();
     }
     
@@ -1016,5 +1027,17 @@ public class Term extends BaseActivity implements UpdateCallback,
         if (handlers.size() > 0) {
             startActivity(openLink);
         }
+    }
+    
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        viewFlipper.setDisplayedChild(savedInstanceState.getInt("current_view"));
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+    
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        savedInstanceState.putInt("current_view", viewFlipper.getDisplayedChild());
+        super.onSaveInstanceState(savedInstanceState);
     }
 }
