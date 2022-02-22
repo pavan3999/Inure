@@ -1,4 +1,4 @@
-package app.simple.inure.ui.viewers
+package app.simple.inure.ui.panels
 
 import android.content.pm.PackageInfo
 import android.os.Bundle
@@ -10,22 +10,18 @@ import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.viewModels
 import app.simple.inure.R
 import app.simple.inure.adapters.home.AdapterRecentlyUpdated
-import app.simple.inure.apk.utils.PackageUtils.launchThisPackage
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.decorations.ripple.DynamicRippleImageButton
-import app.simple.inure.dialogs.action.Preparing
+import app.simple.inure.dialogs.app.AppsMenu
 import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.extension.popup.PopupMenuCallback
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
-import app.simple.inure.popups.app.PopupMainList
 import app.simple.inure.ui.app.AppInfo
+import app.simple.inure.ui.preferences.mainscreens.MainPreferencesScreen
 import app.simple.inure.util.FragmentHelper
 import app.simple.inure.viewmodels.panels.HomeViewModel
 
 class RecentlyUpdated : ScopedFragment() {
 
     private lateinit var recyclerView: CustomVerticalRecyclerView
-    private lateinit var back: DynamicRippleImageButton
     private lateinit var adapterRecentlyUpdated: AdapterRecentlyUpdated
 
     private val homeViewModel: HomeViewModel by viewModels()
@@ -34,7 +30,6 @@ class RecentlyUpdated : ScopedFragment() {
         val view = inflater.inflate(R.layout.fragment_recently_updated, container, false)
 
         recyclerView = view.findViewById(R.id.recently_updated_recycler_view)
-        back = view.findViewById(R.id.recently_updated_back_button)
 
         return view
     }
@@ -42,7 +37,7 @@ class RecentlyUpdated : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        homeViewModel.getUpdatedApps().observe(viewLifecycleOwner, {
+        homeViewModel.getUpdatedApps().observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
             adapterRecentlyUpdated = AdapterRecentlyUpdated()
@@ -59,31 +54,23 @@ class RecentlyUpdated : ScopedFragment() {
                 }
 
                 override fun onAppLongPress(packageInfo: PackageInfo, anchor: View, icon: ImageView, position: Int) {
-                    PopupMainList(anchor, packageInfo.packageName).setOnMenuItemClickListener(object : PopupMenuCallback {
-                        override fun onMenuItemClicked(source: String) {
-                            when (source) {
-                                getString(R.string.launch) -> {
-                                    packageInfo.launchThisPackage(requireContext())
-                                }
-                                getString(R.string.app_information) -> {
-                                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                                Information.newInstance(packageInfo),
-                                                                "information")
-                                }
-                                getString(R.string.send) -> {
-                                    Preparing.newInstance(packageInfo)
-                                            .show(parentFragmentManager, "send_app")
-                                }
-                            }
-                        }
-                    })
+                    AppsMenu.newInstance(packageInfo)
+                        .show(childFragmentManager, "apps_menu")
+                }
+
+                override fun onSearchPressed(view: View) {
+                    clearTransitions()
+                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                Search.newInstance(true),
+                                                "search")
+                }
+
+                override fun onSettingsPressed(view: View) {
+                    clearExitTransition()
+                    FragmentHelper.openFragment(parentFragmentManager, MainPreferencesScreen.newInstance(), "prefs_screen")
                 }
             })
-
-            back.setOnClickListener {
-                requireActivity().onBackPressed()
-            }
-        })
+        }
     }
 
     private fun openAppInfo(packageInfo: PackageInfo, icon: ImageView) {
