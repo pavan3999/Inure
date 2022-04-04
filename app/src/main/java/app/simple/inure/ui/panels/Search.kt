@@ -14,8 +14,8 @@ import app.simple.inure.adapters.ui.AdapterSearch
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.searchview.SearchView
 import app.simple.inure.decorations.searchview.SearchViewEventListener
-import app.simple.inure.dialogs.app.AppsMenu
-import app.simple.inure.dialogs.app.SearchMenu
+import app.simple.inure.dialogs.menus.AppsMenu
+import app.simple.inure.dialogs.menus.SearchMenu
 import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
 import app.simple.inure.preferences.SearchPreferences
@@ -63,7 +63,7 @@ class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListe
                     openAppInfo(packageInfo, icon)
                 }
 
-                override fun onAppLongPress(packageInfo: PackageInfo, anchor: View, icon: ImageView, position: Int) {
+                override fun onAppLongPressed(packageInfo: PackageInfo, icon: ImageView) {
                     AppsMenu.newInstance(packageInfo)
                         .show(childFragmentManager, "apps_menu")
                 }
@@ -82,7 +82,6 @@ class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListe
 
             override fun onSearchTextChanged(keywords: String, count: Int) {
                 searchViewModel.setSearchKeywords(keywords)
-                searchViewModel.loadSearchData()
             }
         })
     }
@@ -97,9 +96,12 @@ class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListe
         when (key) {
             SearchPreferences.sortStyle,
             SearchPreferences.isSortingReversed,
-            SearchPreferences.listAppsCategory,
-            -> {
-                searchViewModel.loadSearchData()
+            SearchPreferences.listAppsCategory -> {
+                searchViewModel.loadSearchData(SearchPreferences.getLastSearchKeyword())
+            }
+            SearchPreferences.ignoreCasing -> {
+                appsAdapterSearchSmall.ignoreCasing = SearchPreferences.isCasingIgnored()
+                searchViewModel.loadSearchData(SearchPreferences.getLastSearchKeyword())
             }
         }
     }

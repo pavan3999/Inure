@@ -7,7 +7,7 @@ plugins {
 android {
     compileSdkVersion 31
 
-    def appVersionCode = 21
+    def appVersionCode = 25
     def appVersionName = "build_${appVersionCode} (alpha)"
 
     buildFeatures {
@@ -16,9 +16,6 @@ android {
 
     defaultConfig {
         applicationId "app.simple.inure"
-
-        // minSdkVersion 21 is needed for pthread_mutex_timedlock and pthread_condattr_setclock
-        // minSdkVersion 23 is needed for forkpty
         minSdkVersion 23
         targetSdkVersion 31
         versionCode appVersionCode
@@ -27,8 +24,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         resValue "string", "versionName", versionName
-
-        ndkVersion '23.1.7779620'
 
         externalNativeBuild {
             cmake {
@@ -47,6 +42,12 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+
+            dependenciesInfo {
+                includeInApk true
+                includeInBundle true
+            }
         }
         debug {
             versionNameSuffix "_debug"
@@ -62,6 +63,8 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11
     }
+
+    ndkVersion '24.0.8215888'
 }
 
 dependencies {
@@ -90,6 +93,7 @@ dependencies {
     implementation 'androidx.webkit:webkit:1.4.0'
     implementation 'androidx.recyclerview:recyclerview-selection:1.1.0'
     implementation 'androidx.documentfile:documentfile:1.0.1'
+    implementation 'androidx.media:media:1.5.0'
 
     // Google
     implementation 'com.google.android.material:material:1.5.0'
@@ -109,11 +113,17 @@ dependencies {
     implementation 'com.bogdwellers:pinchtozoom:0.1'
     implementation "com.anggrayudi:storage:0.13.0"
     implementation 'com.github.duanhong169:drawabletoolbox:1.0.7'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     // root
     def libsuVersion = '3.1.2'
     implementation "com.github.topjohnwu.libsu:core:${libsuVersion}"
     implementation "com.github.topjohnwu.libsu:io:${libsuVersion}"
+
+    // Room
+    implementation "androidx.room:room-ktx:2.4.2"
+    kapt "androidx.room:room-compiler:2.4.2"
+    androidTestImplementation "androidx.room:room-testing:2.4.2"
 
     // debugImplementation because LeakCanary should only run in debug builds.
     // debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'

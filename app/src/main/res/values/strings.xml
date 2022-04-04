@@ -59,6 +59,7 @@
     <string name="usage">Usage</string>
     <string name="version">Version</string>
     <string name="version_code">Version Code</string>
+    <string name="version_name">Version Name</string>
     <string name="install_location">Install Location</string>
     <string name="minimum_sdk">Minimum SDK</string>
     <string name="target_sdk">Target SDK</string>
@@ -89,8 +90,8 @@
     <string name="sign_algorithm_oid">Sign Algorithm OID</string>
     <string name="public_key">Public Key</string>
     <string name="information">Information</string>
-    <string name="us_xml_viewer_desc">Use TextView based Xml Viewer instead of using WebView to view Xml resource files.</string>
-    <string name="use_textview_xml_viewer">Use TextView Xml Viewer</string>
+    <string name="us_xml_viewer_desc">Use WebView based Xml Viewer instead of TextView to view Xml resource files.</string>
+    <string name="use_webview_xml_viewer"><strike>Use WebView Xml Viewer</strike></string>
     <string name="save">Save</string>
     <string name="copy">Copy</string>
     <string name="saved_successfully">Saved Successfully</string>
@@ -163,7 +164,7 @@
     <string name="desc_binary_format">Use binary format for showing file sizes instead of using the conventional SI format.\n\ni.e. 1024 kB = 1 mB</string>
     <string name="progress">%d%%</string>
     <string name="load_large_strings">Load Large Strings</string>
-    <string name="desc_large_strings">Suppress error while loading strings that are unusually large to be rendered smoothly on the screen. This option is not recommended as this can lead to UI freezing issues in the app and loading large string can take longer time to appear on the screen.</string>
+    <string name="desc_large_strings">Suppress error while loading strings that are unusually large to be rendered smoothly on the screen.\n\nThis option is not recommended as this can lead to UI freezing issues in the app and loading large string can take longer time to appear on the screen.</string>
     <string name="not_granted">Not Granted, Click to Allow</string>
     <string name="grant_usage_access_permission">Grant Usage Access Permission</string>
     <string name="grant_storage_access_permission">Grant Storage Access Permission</string>
@@ -176,7 +177,7 @@
     <string name="skip">Skip for Now</string>
     <string name="executing_command">Executing Command…</string>
     <string name="force_stop">Force Stop</string>
-    <string name="sure">Sure?</string>
+    <string name="are_you_sure">Are You Sure?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="open_in_settings">Open in Settings…</string>
@@ -224,7 +225,8 @@
     <string name="audio_player">Audio Player</string>
     <string name="used_for_seconds">Used for %1$s seconds</string>
     <string name="used_for_short">Used for %1$s minutes</string>
-    <string name="used_for_long">Used for %1$s hour %2$s minutes</string>
+    <string name="used_for_long">Used for %1$s hours %2$s minutes</string>
+    <string name="used_for_days">Used for %1$s days %2$s hours %3$s minutes</string>
     <string name="most_used">Most Used</string>
     <string name="time_used">Time Used</string>
     <string name="data_sent">Data Sent</string>
@@ -437,7 +439,7 @@
     <string name="good">Good</string>
     <string name="dead">Dead</string>
     <string name="overheat">Overheat</string>
-    <string name="overvoltage">Overvoltage</string>
+    <string name="overvoltage">Over Voltage</string>
     <string name="unspecified_failure">Unspecified Failure</string>
     <string name="health">Health</string>
     <string name="voltage">Voltage</string>
@@ -460,8 +462,38 @@
     <string name="desc_skip_loading">Do not load data on app launch and goes directly to the app\'s home screen.\n\nData will still be loaded just as usual but all tasks will put in background and loading won\'t block the app launch but can add delay to in-app actions if data is not available.</string>
     <string name="path">Path</string>
     <string name="standalone_terminal">Standalone Terminal</string>
-    <string name="standalone_terminal_desc">Use terminal as a standalone app and launch it directly from home screen without needing to open the main app everytime terminal is needed.</string>
+    <string name="standalone_terminal_desc">Use terminal as a standalone app and launch it directly from home screen without needing to open the main app every time terminal is needed.</string>
     <string name="ok">OK</string>
     <string name="share">Share</string>
     <string name="favourite_commands">Favourite Commands</string>
+    <string name="quick_apps">Quick Apps</string>
+    <string name="add_to_quick_apps">Add to Quick Apps</string>
+    <string name="remove_from_quick_apps">Remove from Quick App</string>
+    <string name="limit_stats_to_hours">Limit Stats to Hours</string>
+    <string name="sure">Sure</string>
+    <string name="editor">Editor</string>
+    <string name="ignore_case">Ignore Case</string>
+    <string name="formatting">Formatting</string>
+    <string name="sdk_value">SDK Value</string>
+    <string name="pie_hole_radius">Pie Hole Radius</string>
+    <string name="termux_title">Use Termux</string>
+    <string name="termux_desc">Use Termux instead of app\'s native Terminal Emulator.</string>
+    <string name="desc_share">Tell others about the app \☺</string>
+    <string name="desc_share_02">Scan the QR Code to open app\'s page on Play Store or share app\'s link.</string>
+    <string name="share_message">Share Message</string>
+    <string name="reduce_animations">Reduce Animations</string>
+    <string name="desc_reduce_animations">Disable some unnecessary animations throughout the app. May improve app\'s performance in some devices.\n\nTo disable transition animations, go to %1s panel.</string>
+    <string name="info_uninstalled">This list only shows apps that have been deleted with the flag <bold>DELETE_KEEP_DATA</bold> with a possibility of being reinstalled in future.\n\nThis list does not monitor regularly uninstalled applications.</string>
+    <string name="gestures">Gestures</string>
+    <string name="show_taps">Show Taps</string>
+    <string name="show_taps_desc">Show visual feedbacks for touch events in the app.</string>
+    <string name="not_selected">Not Selected</string>
+    <string name="selected_on">Selected on %1$s</string>
+    <string name="move_selection_on_top">Move Selection on Top</string>
+    <string name="notes">Notes</string>
+    <string name="highlight_selected">Highlight Selected</string>
+    <string name="expanded_notes">Expanded Notes</string>
+    <string name="viewers">Viewers</string>
+    <string name="full_screen_audio_player">Full Screen Audio Player</string>
+    <string name="desc_full_screen_audio_player">Use full screen audio player instead of the modal window dialog.</string>
 </resources>

@@ -13,11 +13,12 @@ import app.simple.inure.R
 import app.simple.inure.apk.parsers.APKParser.getApkMeta
 import app.simple.inure.apk.parsers.APKParser.getDexData
 import app.simple.inure.apk.parsers.APKParser.getGlEsVersion
+import app.simple.inure.apk.utils.MetaUtils
 import app.simple.inure.apk.utils.PackageUtils
 import app.simple.inure.apk.utils.PackageUtils.getApplicationInstallTime
 import app.simple.inure.apk.utils.PackageUtils.getApplicationLastUpdateTime
 import app.simple.inure.extension.viewmodels.WrappedViewModel
-import app.simple.inure.preferences.ConfigurationPreferences
+import app.simple.inure.preferences.FormattingPreferences
 import app.simple.inure.util.SDKHelper
 import app.simple.inure.util.StringUtils.applyAccentColor
 import app.simple.inure.util.StringUtils.applySecondaryTextColor
@@ -121,12 +122,12 @@ class AppInformationViewModel(application: Application, val packageInfo: Package
 
     private fun getInstallDate(): Pair<String, Spannable> {
         return Pair(getString(R.string.install_date),
-                    packageInfo.getApplicationInstallTime(context, ConfigurationPreferences.getDateFormat()).applyAccentColor())
+                    packageInfo.getApplicationInstallTime(context, FormattingPreferences.getDateFormat()).applyAccentColor())
     }
 
     private fun getUpdateDate(): Pair<String, Spannable> {
         return Pair(getString(R.string.update_date),
-                    packageInfo.getApplicationLastUpdateTime(context, ConfigurationPreferences.getDateFormat()).applyAccentColor())
+                    packageInfo.getApplicationLastUpdateTime(context, FormattingPreferences.getDateFormat()).applyAccentColor())
     }
 
     private fun getMinSDK(): Pair<String, Spannable> {
@@ -226,11 +227,10 @@ class AppInformationViewModel(application: Application, val packageInfo: Package
     }
 
     private fun getRequestedPermissions(): Pair<String, Spannable> {
-        val appPackageInfo = packageManager.getPackageInfo(packageInfo.packageName, PackageManager.GET_PERMISSIONS)
-
         val permissions = StringBuilder()
 
         try {
+            val appPackageInfo = packageManager.getPackageInfo(packageInfo.packageName, PackageManager.GET_PERMISSIONS)
             appPackageInfo.requestedPermissions.sort()
 
             for (permission in appPackageInfo.requestedPermissions) {
@@ -244,6 +244,8 @@ class AppInformationViewModel(application: Application, val packageInfo: Package
         } catch (e: NullPointerException) {
             e.printStackTrace()
             permissions.append(getString(R.string.no_permissions_required))
+        } catch (e: PackageManager.NameNotFoundException) {
+            permissions.append(getString(R.string.app_not_installed, packageInfo.packageName))
         }
 
         return Pair(getString(R.string.permissions),
@@ -281,20 +283,30 @@ class AppInformationViewModel(application: Application, val packageInfo: Package
             PackageManager.GET_CONFIGURATIONS or PackageManager.GET_DISABLED_COMPONENTS
         }
 
-        val p0 = packageManager.getPackageInfo(packageInfo.packageName, flags)
-
         try {
+            val p0 = packageManager.getPackageInfo(packageInfo.packageName, flags)
+
             for (feature in p0.reqFeatures) {
                 if (features.isEmpty()) {
-                    features.append(feature.name)
+                    if (feature.name.isNullOrEmpty()) {
+                        features.append(MetaUtils.getOpenGL(feature.reqGlEsVersion))
+                    } else {
+                        features.append(feature.name)
+                    }
                 } else {
                     features.append("\n")
-                    features.append(feature.name)
+                    if (feature.name.isNullOrEmpty()) {
+                        features.append(MetaUtils.getOpenGL(feature.reqGlEsVersion))
+                    } else {
+                        features.append(feature.name)
+                    }
                 }
             }
         } catch (e: NullPointerException) {
             e.printStackTrace()
             features.append(getString(R.string.not_available))
+        } catch (e: PackageManager.NameNotFoundException) {
+            features.append(getString(R.string.app_not_installed, packageInfo.packageName))
         }
 
         return Pair(getString(R.string.uses_feature),

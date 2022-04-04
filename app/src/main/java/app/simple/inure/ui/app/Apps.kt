@@ -11,9 +11,9 @@ import android.widget.ImageView
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
-import app.simple.inure.adapters.ui.AdapterAppsSimple
+import app.simple.inure.adapters.ui.AdapterAppsDetailed
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.dialogs.app.AppsMenu
+import app.simple.inure.dialogs.menus.AppsMenu
 import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
 import app.simple.inure.popups.apps.PopupAppsCategory
@@ -27,7 +27,7 @@ import app.simple.inure.viewmodels.panels.AppsViewModel
 class Apps : ScopedFragment() {
 
     private lateinit var appsListRecyclerView: CustomVerticalRecyclerView
-    private lateinit var adapter: AdapterAppsSimple
+    private lateinit var adapter: AdapterAppsDetailed
     private lateinit var model: AppsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -41,10 +41,12 @@ class Apps : ScopedFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         model.getAppData().observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
-            adapter = AdapterAppsSimple()
+            adapter = AdapterAppsDetailed()
             adapter.apps = it
 
             appsListRecyclerView.adapter = adapter
@@ -55,10 +57,12 @@ class Apps : ScopedFragment() {
 
             adapter.setOnItemClickListener(object : AppsAdapterCallbacks {
                 override fun onAppClicked(packageInfo: PackageInfo, icon: ImageView) {
-                    openAppInfo(packageInfo, icon)
+                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                AppInfo.newInstance(packageInfo, icon.transitionName),
+                                                icon, "app_info")
                 }
 
-                override fun onAppLongPress(packageInfo: PackageInfo, anchor: View, icon: ImageView, position: Int) {
+                override fun onAppLongPressed(packageInfo: PackageInfo, icon: ImageView) {
                     AppsMenu.newInstance(packageInfo)
                         .show(childFragmentManager, "apps_menu")
                 }
@@ -90,22 +94,13 @@ class Apps : ScopedFragment() {
                 Log.d("Apps", if (it) "Apps Loaded" else "Failed")
             }
         }
-
-        super.onViewCreated(view, savedInstanceState)
-    }
-
-    private fun openAppInfo(packageInfo: PackageInfo, icon: ImageView) {
-        FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                    AppInfo.newInstance(packageInfo, icon.transitionName),
-                                    icon, "app_info")
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             MainPreferences.sortStyle,
             MainPreferences.isSortingReversed,
-            MainPreferences.listAppsCategory,
-            -> {
+            MainPreferences.listAppsCategory -> {
                 model.loadAppData()
             }
         }

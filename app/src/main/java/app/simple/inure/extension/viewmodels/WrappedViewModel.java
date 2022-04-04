@@ -16,7 +16,7 @@ public class WrappedViewModel extends AndroidViewModel {
     }
     
     public final Context getContext() {
-        return ContextUtils.Companion.updateLocale(getApplication().getApplicationContext(), "en");
+        return ContextUtils.INSTANCE.updateLocale(getApplication().getApplicationContext(), "en");
     }
     
     public final Context applicationContext() {
@@ -27,6 +27,10 @@ public class WrappedViewModel extends AndroidViewModel {
         return getContext().getString(id);
     }
     
+    public final String getString(int resId, Object... formatArgs) {
+        return getContext().getString(resId, formatArgs);
+    }
+    
     public final ContentResolver getContentResolver() {
         return getApplication().getContentResolver();
     }
@@ -34,4 +38,5 @@ public class WrappedViewModel extends AndroidViewModel {
     public final PackageManager getPackageManager() {
         return getContext().getPackageManager();
     }
+    
 }

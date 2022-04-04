@@ -11,7 +11,7 @@ import androidx.fragment.app.viewModels
 import app.simple.inure.R
 import app.simple.inure.adapters.home.AdapterRecentlyInstalled
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.dialogs.app.AppsMenu
+import app.simple.inure.dialogs.menus.AppsMenu
 import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
 import app.simple.inure.ui.app.AppInfo
@@ -29,6 +29,7 @@ class RecentlyInstalled : ScopedFragment() {
         val view = inflater.inflate(R.layout.fragment_recently_installed, container, false)
 
         recyclerView = view.findViewById(R.id.recently_installed_recycler_view)
+        appsAdapterSmall = AdapterRecentlyInstalled()
 
         return view
     }
@@ -39,7 +40,6 @@ class RecentlyInstalled : ScopedFragment() {
         homeViewModel.getRecentApps().observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
-            appsAdapterSmall = AdapterRecentlyInstalled()
             appsAdapterSmall?.apps = it
             recyclerView.adapter = appsAdapterSmall
 
@@ -52,7 +52,7 @@ class RecentlyInstalled : ScopedFragment() {
                     openAppInfo(packageInfo, icon)
                 }
 
-                override fun onAppLongPress(packageInfo: PackageInfo, anchor: View, icon: ImageView, position: Int) {
+                override fun onAppLongPressed(packageInfo: PackageInfo, icon: ImageView) {
                     AppsMenu.newInstance(packageInfo)
                         .show(childFragmentManager, "apps_menu")
                 }

@@ -4,18 +4,20 @@ import android.content.pm.PackageInfo;
 import android.view.View;
 import android.widget.ImageView;
 
-import org.jetbrains.annotations.NotNull;
+import androidx.annotation.NonNull;
+import app.simple.inure.models.BatchPackageInfo;
+import app.simple.inure.models.NotesPackageInfo;
 
 public interface AppsAdapterCallbacks {
-    default void onAppClicked(@NotNull PackageInfo packageInfo, @NotNull ImageView icon) {
+    default void onAppClicked(@NonNull PackageInfo packageInfo, @NonNull ImageView icon) {
     
     }
     
-    default void onAppLongPress(@NotNull PackageInfo packageInfo, @NotNull View anchor, ImageView icon, int position) {
+    default void onAppLongPressed(@NonNull PackageInfo packageInfo, @NonNull ImageView icon) {
     
     }
     
-    default void onSearchPressed(@NotNull View view) {
+    default void onSearchPressed(@NonNull View view) {
     
     }
     
@@ -27,11 +29,19 @@ public interface AppsAdapterCallbacks {
     
     }
     
-    default void onSettingsPressed(@NotNull View view) {
+    default void onSettingsPressed(@NonNull View view) {
     
     }
     
-    default void onItemSelected(int position) {
+    default void onInfoPressed(@NonNull View view) {
+    
+    }
+    
+    default void onBatchChanged(@NonNull BatchPackageInfo batchPackageInfo) {
+    
+    }
+    
+    default void onNoteClicked(@NonNull NotesPackageInfo notesPackageInfo) {
     
     }
 }

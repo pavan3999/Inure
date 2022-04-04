@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -19,7 +20,8 @@ import kotlinx.coroutines.CoroutineScope
  * [ScopedFragment] is lifecycle aware [CoroutineScope] fragment
  * used to bind independent coroutines with the lifecycle of
  * the given fragment. All [Fragment] extension classes must extend
- * this class instead. *
+ * this class instead.
+ *
  * It is recommended to read this code before implementing to know
  * its purpose and importance
  */
@@ -159,6 +161,10 @@ abstract class ScopedFragment : Fragment(), SharedPreferences.OnSharedPreference
      */
     protected fun requireApplication(): Application {
         return requireActivity().application
+    }
+
+    protected fun requirePackageManager(): PackageManager {
+        return requireActivity().packageManager
     }
 
     protected fun getInteger(resId: Int): Int {

@@ -23,13 +23,16 @@ import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.dialogs.action.*
+import app.simple.inure.dialogs.app.Sure
 import app.simple.inure.dialogs.miscellaneous.Error
 import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.factories.panels.PackageInfoFactory
 import app.simple.inure.glide.util.ImageLoader.loadAppIcon
-import app.simple.inure.popups.app.PopupSure
+import app.simple.inure.preferences.AccessibilityPreferences
 import app.simple.inure.preferences.AppInfoPanelPreferences
 import app.simple.inure.preferences.ConfigurationPreferences
+import app.simple.inure.preferences.DevelopmentPreferences
+import app.simple.inure.ui.panels.NotesEditor
 import app.simple.inure.ui.viewers.*
 import app.simple.inure.util.FragmentHelper.openFragment
 import app.simple.inure.util.MarketUtils
@@ -46,6 +49,7 @@ class AppInfo : ScopedFragment() {
     private lateinit var appInformation: DynamicRippleTextView
     private lateinit var storage: DynamicRippleTextView
     private lateinit var directories: DynamicRippleTextView
+    private lateinit var notes: DynamicRippleTextView
     private lateinit var meta: RecyclerView
     private lateinit var actions: RecyclerView
     private lateinit var miscellaneous: RecyclerView
@@ -66,9 +70,16 @@ class AppInfo : ScopedFragment() {
         appInformation = view.findViewById(R.id.app_info_information_tv)
         storage = view.findViewById(R.id.app_info_storage_tv)
         directories = view.findViewById(R.id.app_info_directories_tv)
+        notes = view.findViewById(R.id.app_info_notes_tv)
         meta = view.findViewById(R.id.app_info_menu)
         actions = view.findViewById(R.id.app_info_options)
         miscellaneous = view.findViewById(R.id.app_info_miscellaneous)
+
+        if (AccessibilityPreferences.isAnimationReduced()) {
+            meta.layoutAnimation = null
+            actions.layoutAnimation = null
+            miscellaneous.layoutAnimation = null
+        }
 
         foldMetaDataMenu = view.findViewById(R.id.fold_app_info_menu)
         foldActionsMenu = view.findViewById(R.id.fold_app_info_actions)
@@ -77,7 +88,7 @@ class AppInfo : ScopedFragment() {
         packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
 
         packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        componentsViewModel = ViewModelProvider(this, packageInfoFactory).get(AppInfoMenuViewModel::class.java)
+        componentsViewModel = ViewModelProvider(this, packageInfoFactory)[AppInfoMenuViewModel::class.java]
 
         metaMenuState()
         actionMenuState()
@@ -89,7 +100,7 @@ class AppInfo : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        componentsViewModel.getMenuItems().observe(viewLifecycleOwner, {
+        componentsViewModel.getMenuItems().observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
             if (AppInfoPanelPreferences.isMetaMenuFolded()) {
@@ -113,10 +124,10 @@ class AppInfo : ScopedFragment() {
                 override fun onAppInfoMenuClicked(source: String, icon: ImageView) {
                     when (source) {
                         getString(R.string.manifest) -> {
-                            if (ConfigurationPreferences.isXmlViewerTextView()) {
-                                openFragment(requireActivity().supportFragmentManager, XMLViewerTextView.newInstance(packageInfo, true, "AndroidManifest.xml"), icon, "manifest")
-                            } else {
+                            if (DevelopmentPreferences.isWebViewXmlViewer()) {
                                 openFragment(requireActivity().supportFragmentManager, XMLViewerWebView.newInstance(packageInfo, true, "AndroidManifest.xml"), icon, "manifest")
+                            } else {
+                                openFragment(requireActivity().supportFragmentManager, XMLViewerTextView.newInstance(packageInfo, true, "AndroidManifest.xml"), icon, "manifest")
                             }
                         }
                         getString(R.string.services) -> {
@@ -158,9 +169,9 @@ class AppInfo : ScopedFragment() {
                     }
                 }
             })
-        })
+        }
 
-        componentsViewModel.getMenuOptions().observe(viewLifecycleOwner, {
+        componentsViewModel.getMenuOptions().observe(viewLifecycleOwner) {
 
             if (AppInfoPanelPreferences.isActionMenuFolded()) return@observe
 
@@ -177,15 +188,20 @@ class AppInfo : ScopedFragment() {
                         }
                         getString(R.string.uninstall) -> {
                             if (ConfigurationPreferences.isUsingRoot()) {
-                                PopupSure(icon).onSure = {
-                                    val p = Uninstaller.newInstance(packageInfo)
+                                val p = Sure.newInstance()
+                                p.setOnSureCallbackListener(object : Sure.Companion.SureCallbacks {
+                                    override fun onSure() {
+                                        val uninstaller = Uninstaller.newInstance(packageInfo)
 
-                                    p.listener = {
-                                        requireActivity().supportFragmentManager.popBackStackImmediate()
+                                        uninstaller.listener = {
+                                            requireActivity().supportFragmentManager.popBackStackImmediate()
+                                        }
+
+                                        uninstaller.show(childFragmentManager, "uninstaller")
                                     }
+                                })
 
-                                    p.show(childFragmentManager, "uninstaller")
-                                }
+                                p.show(childFragmentManager, "sure")
                             } else {
                                 val p = Uninstaller.newInstance(packageInfo)
 
@@ -200,30 +216,50 @@ class AppInfo : ScopedFragment() {
                             Preparing.newInstance(packageInfo).show(childFragmentManager, "prepare_send_files")
                         }
                         getString(R.string.clear_data) -> {
-                            PopupSure(icon).onSure = {
-                                ClearData.newInstance(packageInfo).show(parentFragmentManager, "shell_executor")
-                            }
+                            val p = Sure.newInstance()
+                            p.setOnSureCallbackListener(object : Sure.Companion.SureCallbacks {
+                                override fun onSure() {
+                                    ClearData.newInstance(packageInfo).show(parentFragmentManager, "shell_executor")
+                                }
+                            })
+
+                            p.show(childFragmentManager, "sure")
                         }
                         getString(R.string.clear_cache) -> {
-                            PopupSure(icon).onSure = {
-                                ClearCache.newInstance(packageInfo).show(parentFragmentManager, "clear_cache")
-                            }
+                            val p = Sure.newInstance()
+                            p.setOnSureCallbackListener(object : Sure.Companion.SureCallbacks {
+                                override fun onSure() {
+                                    ClearCache.newInstance(packageInfo).show(parentFragmentManager, "clear_cache")
+                                }
+                            })
+
+                            p.show(childFragmentManager, "sure")
                         }
                         getString(R.string.force_stop) -> {
-                            PopupSure(icon).onSure = {
-                                ForceStop.newInstance(packageInfo).show(childFragmentManager, "force_stop")
-                            }
+                            val p = Sure.newInstance()
+                            p.setOnSureCallbackListener(object : Sure.Companion.SureCallbacks {
+                                override fun onSure() {
+                                    ForceStop.newInstance(packageInfo).show(childFragmentManager, "force_stop")
+                                }
+                            })
+
+                            p.show(childFragmentManager, "sure")
                         }
                         getString(R.string.disable), getString(R.string.enable) -> {
-                            PopupSure(icon).onSure = {
-                                val f = State.newInstance(requireContext().packageManager.getPackageInfo(packageInfo.packageName, 0))
+                            val p = Sure.newInstance()
+                            p.setOnSureCallbackListener(object : Sure.Companion.SureCallbacks {
+                                override fun onSure() {
+                                    val f = State.newInstance(requireContext().packageManager.getPackageInfo(packageInfo.packageName, 0))
 
-                                f.onSuccess = {
-                                    componentsViewModel.loadActionOptions()
+                                    f.onSuccess = {
+                                        componentsViewModel.loadActionOptions()
+                                    }
+
+                                    f.show(childFragmentManager, "state")
                                 }
+                            })
 
-                                f.show(childFragmentManager, "state")
-                            }
+                            p.show(childFragmentManager, "sure")
                         }
                         getString(R.string.open_in_settings) -> {
                             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -233,9 +269,9 @@ class AppInfo : ScopedFragment() {
                     }
                 }
             })
-        })
+        }
 
-        componentsViewModel.getMiscellaneousItems().observe(viewLifecycleOwner, {
+        componentsViewModel.getMiscellaneousItems().observe(viewLifecycleOwner) {
 
             if (AppInfoPanelPreferences.isMiscMenuFolded()) return@observe
 
@@ -263,9 +299,9 @@ class AppInfo : ScopedFragment() {
                     }
                 }
             })
-        })
+        }
 
-        componentsViewModel.getError().observe(viewLifecycleOwner, {
+        componentsViewModel.getError().observe(viewLifecycleOwner) {
             val e = Error.newInstance(it)
             e.show(childFragmentManager, "error_dialog")
             e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
@@ -273,7 +309,7 @@ class AppInfo : ScopedFragment() {
                     requireActivity().onBackPressed()
                 }
             })
-        })
+        }
 
         icon.transitionName = requireArguments().getString("transition_name")
         icon.loadAppIcon(packageInfo.packageName)
@@ -288,12 +324,17 @@ class AppInfo : ScopedFragment() {
 
         storage.setOnClickListener {
             clearExitTransition()
-            openFragment(requireActivity().supportFragmentManager, Storage.newInstance(packageInfo), getString(R.string.storage))
+            openFragment(requireActivity().supportFragmentManager, Storage.newInstance(packageInfo), "storage")
         }
 
         directories.setOnClickListener {
             clearExitTransition()
-            openFragment(requireActivity().supportFragmentManager, Directories.newInstance(packageInfo), getString(R.string.directories))
+            openFragment(requireActivity().supportFragmentManager, Directories.newInstance(packageInfo), "directories")
+        }
+
+        notes.setOnClickListener {
+            clearExitTransition()
+            openFragment(requireActivity().supportFragmentManager, NotesEditor.newInstance(packageInfo), "notes_viewer")
         }
 
         foldMetaDataMenu.setOnClickListener {
@@ -357,11 +398,6 @@ class AppInfo : ScopedFragment() {
                 miscMenuState()
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        handler.removeCallbacksAndMessages(null)
     }
 
     companion object {

@@ -11,7 +11,7 @@ import androidx.fragment.app.viewModels
 import app.simple.inure.R
 import app.simple.inure.adapters.home.AdapterFrequentlyUsed
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.dialogs.app.AppsMenu
+import app.simple.inure.dialogs.menus.AppsMenu
 import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
 import app.simple.inure.ui.app.AppInfo
@@ -30,6 +30,7 @@ class MostUsed : ScopedFragment() {
         val view = inflater.inflate(R.layout.fragment_most_used, container, false)
 
         recyclerView = view.findViewById(R.id.most_used_recycler_view)
+        adapterFrequentlyUsed = AdapterFrequentlyUsed()
 
         return view
     }
@@ -40,7 +41,6 @@ class MostUsed : ScopedFragment() {
         homeViewModel.frequentlyUsed.observe(viewLifecycleOwner) {
             postponeEnterTransition()
 
-            adapterFrequentlyUsed = AdapterFrequentlyUsed()
             adapterFrequentlyUsed.apps = it
             recyclerView.adapter = adapterFrequentlyUsed
 
@@ -53,7 +53,7 @@ class MostUsed : ScopedFragment() {
                     openAppInfo(packageInfo, icon)
                 }
 
-                override fun onAppLongPress(packageInfo: PackageInfo, anchor: View, icon: ImageView, position: Int) {
+                override fun onAppLongPressed(packageInfo: PackageInfo, icon: ImageView) {
                     AppsMenu.newInstance(packageInfo)
                         .show(childFragmentManager, "apps_menu")
                 }

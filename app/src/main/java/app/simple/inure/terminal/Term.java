@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
+import androidx.core.view.WindowCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import app.simple.inure.R;
 import app.simple.inure.activities.preferences.PreferenceActivity;
@@ -69,9 +70,8 @@ import app.simple.inure.decorations.ripple.DynamicRippleTextView;
 import app.simple.inure.dialogs.terminal.DialogCloseWindow;
 import app.simple.inure.dialogs.terminal.DialogContextMenu;
 import app.simple.inure.dialogs.terminal.DialogSpecialKeys;
+import app.simple.inure.dialogs.terminal.DialogTerminalMainMenu;
 import app.simple.inure.extension.activities.BaseActivity;
-import app.simple.inure.extension.popup.PopupMenuCallback;
-import app.simple.inure.popups.terminal.PopupTerminal;
 import app.simple.inure.popups.terminal.PopupTerminalWindows;
 import app.simple.inure.preferences.ShellPreferences;
 import app.simple.inure.preferences.TerminalPreferences;
@@ -292,32 +292,32 @@ public class Term extends BaseActivity implements UpdateCallback,
     };
     
     @Override
-    public void onCreate(Bundle icicle) {
-        super.onCreate(icicle);
-        Log.v(TermDebug.LOG_TAG, "onCreate");
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         
         mPrivateAlias = new ComponentName(this, RemoteInterface.PRIVACT_ACTIVITY_ALIAS);
-    
-        if (icicle == null) {
+        
+        if (bundle == null) {
             onNewIntent(getIntent());
         }
-    
+        
         final SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         mSettings = new TermSettings(getResources(), mPrefs);
         mPrefs.registerOnSharedPreferenceChangeListener(this);
-    
+        
         Intent broadcast = new Intent(ACTION_PATH_BROADCAST);
         broadcast.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-    
+        
         mPendingPathBroadcasts++;
         sendOrderedBroadcast(broadcast, PERMISSION_PATH_BROADCAST, mPathReceiver, null, RESULT_OK, null, null);
-    
+        
         broadcast = new Intent(broadcast);
         broadcast.setAction(ACTION_PATH_PREPEND_BROADCAST);
-    
+        
         mPendingPathBroadcasts++;
         sendOrderedBroadcast(broadcast, PERMISSION_PATH_PREPEND_BROADCAST, mPathReceiver, null, RESULT_OK, null, null);
-    
+        
         TSIntent = new Intent(this, TermService.class);
         startService(TSIntent);
         
@@ -335,19 +335,20 @@ public class Term extends BaseActivity implements UpdateCallback,
         } else {
             mActionBarMode = TermSettings.ACTION_BAR_MODE_ALWAYS_VISIBLE;
         }
-    
+        
         setContentView(R.layout.activity_terminal);
         viewFlipper = findViewById(R.id.view_flipper);
         add = findViewById(R.id.add);
         close = findViewById(R.id.close);
         options = findViewById(R.id.options);
         currentWindow = findViewById(R.id.current_window);
-    
+        
         add.setOnClickListener(v -> doCreateNewWindow());
         close.setOnClickListener(v -> confirmCloseWindow());
-        options.setOnClickListener(v -> new PopupTerminal(v, mWakeLock, mWifiLock).setOnMenuClickListener(new PopupMenuCallback() {
-            @Override
-            public void onMenuItemClicked(int source) {
+        options.setOnClickListener(v -> {
+            DialogTerminalMainMenu dialogTerminalMainMenu = DialogTerminalMainMenu.Companion.newInstance(mWakeLock.isHeld(), mWifiLock.isHeld());
+    
+            dialogTerminalMainMenu.setOnTerminalMenuCallbacksListener(source -> {
                 switch (source) {
                     case 0: {
                         startActivityForResult(new Intent(Term.this, WindowList.class), REQUEST_CHOOSE_WINDOW);
@@ -386,11 +387,13 @@ public class Term extends BaseActivity implements UpdateCallback,
                         break;
                     }
                 }
-            }
-        }));
+            });
     
+            dialogTerminalMainMenu.show(getSupportFragmentManager(), "terminal_menu");
+        });
+        
         currentWindow.setOnClickListener(v -> popupTerminalWindows = new PopupTerminalWindows(v, adapterWindows));
-    
+        
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Inure Terminal:" + TermDebug.LOG_TAG);
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -398,19 +401,19 @@ public class Term extends BaseActivity implements UpdateCallback,
         if (AndroidCompat.SDK >= 12) {
             wifiLockMode = WIFI_MODE_FULL_HIGH_PERF;
         }
-    
+        
         mWifiLock = wm.createWifiLock(wifiLockMode, TermDebug.LOG_TAG);
         mHaveFullHwKeyboard = checkHaveFullHwKeyboard(getResources().getConfiguration());
-    
+        
         updatePrefs();
         mAlreadyStarted = true;
-    
+        
         closeBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 try {
                     if (intent.getAction().equals(ACTION_CLOSE)) {
-                        finish();
+                        supportFinishAfterTransition();
                     }
                 } catch (NullPointerException e) {
                     e.printStackTrace();
@@ -460,7 +463,7 @@ public class Term extends BaseActivity implements UpdateCallback,
                     termSessions.add(createTermSession());
                 } catch (IOException e) {
                     Toast.makeText(this, "Failed to start terminal session", Toast.LENGTH_LONG).show();
-                    finish();
+                    supportFinishAfterTransition();
                     return;
                 }
             }
@@ -656,6 +659,7 @@ public class Term extends BaseActivity implements UpdateCallback,
     
     @Override
     protected void onStop() {
+        super.onStop();
         onResumeSelectWindow = viewFlipper.getDisplayedChild();
         viewFlipper.onPause();
         if (termSessions != null) {
@@ -671,8 +675,6 @@ public class Term extends BaseActivity implements UpdateCallback,
         viewFlipper.removeAllViews();
         unbindService(mTSConnection);
         ThemeManager.INSTANCE.removeListener(this);
-    
-        super.onStop();
     }
     
     private boolean checkHaveFullHwKeyboard(Configuration c) {
@@ -763,7 +765,7 @@ public class Term extends BaseActivity implements UpdateCallback,
                 // TODO the left path will be invoked when nothing happened, but this Activity was destroyed!
                 if (termSessions == null || termSessions.size() == 0) {
                     mStopServiceOnFinish = true;
-                    finish();
+                    supportFinishAfterTransition();
                 }
             }
         }
@@ -854,7 +856,7 @@ public class Term extends BaseActivity implements UpdateCallback,
                     case TermSettings.BACK_KEY_STOPS_SERVICE:
                         mStopServiceOnFinish = true;
                     case TermSettings.BACK_KEY_CLOSES_ACTIVITY:
-                        finish();
+                        supportFinishAfterTransition();
                         return true;
                     case TermSettings.BACK_KEY_CLOSES_WINDOW:
                         doCloseWindow();
@@ -883,7 +885,7 @@ public class Term extends BaseActivity implements UpdateCallback,
     
         if (sessions.size() == 0) {
             mStopServiceOnFinish = true;
-            finish();
+            supportFinishAfterTransition();
         } else if (sessions.size() < viewFlipper.getChildCount()) {
             for (int i = 0; i < viewFlipper.getChildCount(); ++i) {
                 EmulatorView v = (EmulatorView) viewFlipper.getChildAt(i);

@@ -7,26 +7,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.doOnPreDraw
 import androidx.core.widget.NestedScrollView
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.simple.inure.R
+import app.simple.inure.adapters.home.AdapterQuickApps
 import app.simple.inure.adapters.menus.AdapterHomeMenu
+import app.simple.inure.apk.utils.PackageUtils
+import app.simple.inure.decorations.overscroll.CustomHorizontalRecyclerView
 import app.simple.inure.decorations.padding.PaddingAwareLinearLayout
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
-import app.simple.inure.dialogs.app.AppsMenu
+import app.simple.inure.dialogs.menus.AppsMenu
 import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.extension.popup.PopupMenuCallback
 import app.simple.inure.popups.app.PopupHome
+import app.simple.inure.preferences.TerminalPreferences
 import app.simple.inure.terminal.Term
 import app.simple.inure.ui.panels.*
 import app.simple.inure.ui.preferences.mainscreens.MainPreferencesScreen
 import app.simple.inure.util.FragmentHelper
 import app.simple.inure.viewmodels.panels.HomeViewModel
+import app.simple.inure.viewmodels.panels.QuickAppsViewModel
 
 class Home : ScopedFragment() {
 
@@ -34,24 +38,31 @@ class Home : ScopedFragment() {
     private lateinit var header: PaddingAwareLinearLayout
     private lateinit var navigationRecyclerView: RecyclerView
     private lateinit var appsCategoryRecyclerView: RecyclerView
+    private lateinit var quickAppsRecyclerView: CustomHorizontalRecyclerView
     private lateinit var icon: ImageView
     private lateinit var search: DynamicRippleImageButton
     private lateinit var settings: DynamicRippleImageButton
     private lateinit var options: DynamicRippleImageButton
 
-    private val homeViewModel: HomeViewModel by viewModels()
+    private lateinit var homeViewModel: HomeViewModel
+    private lateinit var quickAppViewModel: QuickAppsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
         scrollView = view.findViewById(R.id.home_scroll_view)
-        header = view.findViewById(R.id.home_header)
-        navigationRecyclerView = view.findViewById(R.id.home_menu)
-        icon = view.findViewById(R.id.header_icon)
         appsCategoryRecyclerView = view.findViewById(R.id.apps_categories)
+        quickAppsRecyclerView = view.findViewById(R.id.quick_app_recycler_view)
+        navigationRecyclerView = view.findViewById(R.id.home_menu)
+
+        header = view.findViewById(R.id.home_header)
+        icon = view.findViewById(R.id.header_icon)
         search = view.findViewById(R.id.home_header_search_button)
         settings = view.findViewById(R.id.home_header_pref_button)
         options = view.findViewById(R.id.home_header_option_button)
+
+        homeViewModel = ViewModelProvider(requireActivity())[HomeViewModel::class.java]
+        quickAppViewModel = ViewModelProvider(requireActivity())[QuickAppsViewModel::class.java]
 
         return view
     }
@@ -76,36 +87,46 @@ class Home : ScopedFragment() {
                                                         "apps")
                         }
                         getString(R.string.analytics) -> {
-                            Toast.makeText(requireContext(), "Not implemented yet", Toast.LENGTH_SHORT).show()
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        Analytics.newInstance(),
+                                                        icon,
+                                                        "analytics")
                         }
                         getString(R.string.terminal) -> {
-                            val intent = Intent(requireContext(), Term::class.java)
-                            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(requireActivity(), icon, icon.transitionName)
-                            startActivity(intent, options.toBundle())
+                            if (TerminalPreferences.isUsingTermux() && PackageUtils.isPackageInstalledAndEnabled("com.termux", requirePackageManager())) {
+                                PackageUtils.launchThisPackage(requireContext(), "com.termux")
+                            } else {
+                                val intent = Intent(requireActivity(), Term::class.java)
+                                val options = ActivityOptionsCompat.makeSceneTransitionAnimation(requireActivity(), icon, icon.transitionName)
+                                startActivity(intent, options.toBundle())
+                            }
                         }
                         getString(R.string.usage_statistics) -> {
-                            FragmentHelper.openFragment(
-                                    requireActivity().supportFragmentManager,
-                                    Statistics.newInstance(), icon, "stats")
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        Statistics.newInstance(), icon, "stats")
                         }
                         getString(R.string.device_info) -> {
-                            FragmentHelper.openFragment(
-                                    requireActivity().supportFragmentManager,
-                                    DeviceInformation.newInstance(), icon, "info")
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        DeviceInformation.newInstance(), icon, "info")
                         }
                         getString(R.string.sensors) -> {
-                            FragmentHelper.openFragment(
-                                    requireActivity().supportFragmentManager,
-                                    Sensors.newInstance(), icon, "sensors")
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        Sensors.newInstance(), icon, "sensors")
                         }
                         getString(R.string.batch) -> {
-                            Toast.makeText(requireContext(), "This is a complicated feature and still in development. Likely to be available to test soon.", Toast.LENGTH_SHORT).show()
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        Batch.newInstance(), icon, "batch")
+                        }
+                        getString(R.string.notes) -> {
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        Notes.newInstance(), icon, "notes")
                         }
                     }
                 }
             })
 
             navigationRecyclerView.adapter = adapter
+            navigationRecyclerView.scheduleLayoutAnimation()
 
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()
@@ -136,6 +157,14 @@ class Home : ScopedFragment() {
                             FragmentHelper.openFragment(requireActivity().supportFragmentManager,
                                                         MostUsed.newInstance(), icon, "most_used")
                         }
+                        getString(R.string.uninstalled) -> {
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        Uninstalled.newInstance(), icon, "uninstalled")
+                        }
+                        getString(R.string.disabled) -> {
+                            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                        Disabled.newInstance(), icon, "disabled")
+                        }
                     }
                 }
             })
@@ -145,6 +174,22 @@ class Home : ScopedFragment() {
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()
             }
+        }
+
+        quickAppViewModel.getQuickApps().observe(viewLifecycleOwner) {
+            val adapterQuickApps = AdapterQuickApps(it as ArrayList<PackageInfo>)
+
+            adapterQuickApps.seyOnQuickAppAdapterCallbackListener(object : AdapterQuickApps.Companion.QuickAppsAdapterCallbacks {
+                override fun onQuickAppClicked(packageInfo: PackageInfo, icon: ImageView) {
+                    openAppInfo(packageInfo, icon)
+                }
+
+                override fun onQuickAppLongClicked(packageInfo: PackageInfo, icon: ImageView, anchor: ViewGroup) {
+                    openAppMenu(packageInfo)
+                }
+            })
+
+            quickAppsRecyclerView.adapter = adapterQuickApps
         }
 
         search.setOnClickListener {

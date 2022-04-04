@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.View
@@ -13,6 +15,7 @@ import androidx.fragment.app.DialogFragment
 import app.simple.inure.R
 import app.simple.inure.preferences.BehaviourPreferences
 import app.simple.inure.preferences.SharedPreferences.getSharedPreferences
+import app.simple.inure.util.StatusBarHeight
 import app.simple.inure.util.ViewUtils
 
 open class ScopedDialogFragment : DialogFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
@@ -24,6 +27,8 @@ open class ScopedDialogFragment : DialogFragment(), SharedPreferences.OnSharedPr
      * @throws UninitializedPropertyAccessException
      */
     lateinit var packageInfo: PackageInfo
+
+    internal val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +53,15 @@ open class ScopedDialogFragment : DialogFragment(), SharedPreferences.OnSharedPr
         }
 
         window.attributes.gravity = Gravity.CENTER
-        window.attributes.width = (displayMetrics.widthPixels * 1f / 100f * 80f).toInt()
+
+        // TODO - fixe dialog height
+        if (StatusBarHeight.isLandscape(requireContext())) {
+            window.attributes.width = (displayMetrics.widthPixels * 1f / 100f * 60f).toInt()
+            // window.attributes.height = (displayMetrics.heightPixels * 1F / 100F * 90F).toInt()
+        } else {
+            window.attributes.width = (displayMetrics.widthPixels * 1f / 100f * 85f).toInt()
+            // window.attributes.height = (displayMetrics.heightPixels * 1F / 100F * 60F).toInt()
+        }
     }
 
     override fun onResume() {

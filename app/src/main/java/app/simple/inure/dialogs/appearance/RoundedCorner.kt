@@ -1,12 +1,10 @@
 package app.simple.inure.dialogs.appearance
 
 import android.animation.ObjectAnimator
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.DecelerateInterpolator
 import android.widget.SeekBar
 import android.widget.TextView
 import app.simple.inure.R
@@ -29,8 +27,8 @@ class RoundedCorner : ScopedBottomSheetFragment() {
     private lateinit var cornerFrameLayout: DynamicCornerLinearLayout
 
     private var objectAnimator: ObjectAnimator? = null
-    private var lastCornerValue = 0
-    private var isValueSet = false
+    private var lastCornerValue = 0F
+    private val factor = 10F
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.dialog_app_corner, container, false)
@@ -45,23 +43,18 @@ class RoundedCorner : ScopedBottomSheetFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         lastCornerValue = AppearancePreferences.getCornerRadius() * 5
         radiusValue.text = buildSpannableString("${AppearancePreferences.getCornerRadius()} px", 2)
-        radiusSeekBar.max = 400
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            radiusSeekBar.min = 25
-        }
-        updateSeekbar(AppearancePreferences.getCornerRadius() * 5)
+        radiusSeekBar.max = 990
+        radiusSeekBar.updateSeekbar((AppearancePreferences.getCornerRadius() * factor).toInt())
 
         radiusSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress_: Int, fromUser: Boolean) {
-                val progress = if (progress_ < 25) 25 else progress_
-
-                radiusValue.text = buildSpannableString("${progress / 5F} px", 2)
-                updateBackground(progress / 5F)
-
-                if (fromUser) AppearancePreferences.setCornerRadius(progress)
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                println(progress)
+                radiusValue.text = buildSpannableString("${progress / factor} px", 2)
+                updateBackground(progress / factor)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -74,25 +67,13 @@ class RoundedCorner : ScopedBottomSheetFragment() {
         })
 
         set.setOnClickListener {
-            isValueSet = true
+            AppearancePreferences.setCornerRadius(radiusSeekBar.progress / factor)
             this.dismiss()
         }
 
         cancel.setOnClickListener {
-            isValueSet = false
             this.dismiss()
         }
-
-        super.onViewCreated(view, savedInstanceState)
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        if (isValueSet) {
-            requireActivity().recreate()
-        } else {
-            AppearancePreferences.setCornerRadius(lastCornerValue)
-        }
-        super.onDismiss(dialog)
     }
 
     private fun updateBackground(radius: Float) {
@@ -102,14 +83,6 @@ class RoundedCorner : ScopedBottomSheetFragment() {
                 .build()
 
         cornerFrameLayout.background = MaterialShapeDrawable(shapeAppearanceModel)
-    }
-
-    private fun updateSeekbar(value: Int) {
-        objectAnimator = ObjectAnimator.ofInt(radiusSeekBar, "progress", radiusSeekBar.progress, value)
-        objectAnimator?.duration = 1000L
-        objectAnimator?.interpolator = DecelerateInterpolator(1.5F)
-        objectAnimator?.setAutoCancel(true)
-        objectAnimator?.start()
     }
 
     companion object {

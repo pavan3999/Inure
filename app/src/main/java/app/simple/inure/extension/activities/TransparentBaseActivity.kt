@@ -5,12 +5,10 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
-import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -21,6 +19,7 @@ import app.simple.inure.preferences.SharedPreferences
 import app.simple.inure.themes.interfaces.ThemeChangedListener
 import app.simple.inure.themes.manager.ThemeManager
 import app.simple.inure.util.ThemeUtils
+import app.simple.inure.util.ThemeUtils.setTransparentTheme
 
 open class TransparentBaseActivity : AppCompatActivity(), ThemeChangedListener {
 
@@ -49,97 +48,10 @@ open class TransparentBaseActivity : AppCompatActivity(), ThemeChangedListener {
             // fixNavigationBarOverlap()
         }
 
-        setTheme()
+        setTransparentTheme()
         ThemeUtils.setAppTheme(resources)
         ThemeUtils.setBarColors(resources, window)
         setNavColor()
-    }
-
-    private fun setTheme() {
-        when (AppearancePreferences.getAccentColor()) {
-            ContextCompat.getColor(baseContext, R.color.inure) -> {
-                setTheme(R.style.Inure_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.blue) -> {
-                setTheme(R.style.Blue_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.blueGrey) -> {
-                setTheme(R.style.BlueGrey_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.darkBlue) -> {
-                setTheme(R.style.DarkBlue_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.red) -> {
-                setTheme(R.style.Red_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.green) -> {
-                setTheme(R.style.Green_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.orange) -> {
-                setTheme(R.style.Orange_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.purple) -> {
-                setTheme(R.style.Purple_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.yellow) -> {
-                setTheme(R.style.Yellow_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.caribbeanGreen) -> {
-                setTheme(R.style.CaribbeanGreen_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.persianGreen) -> {
-                setTheme(R.style.PersianGreen_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.amaranth) -> {
-                setTheme(R.style.Amaranth_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.indian_red) -> {
-                setTheme(R.style.IndianRed_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.light_coral) -> {
-                setTheme(R.style.LightCoral_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.pink_flare) -> {
-                setTheme(R.style.PinkFlare_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.makeup_tan) -> {
-                setTheme(R.style.MakeupTan_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.egg_yellow) -> {
-                setTheme(R.style.EggYellow_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.medium_green) -> {
-                setTheme(R.style.MediumGreen_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.olive) -> {
-                setTheme(R.style.Olive_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.copperfield) -> {
-                setTheme(R.style.Copperfield_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.mineral_green) -> {
-                setTheme(R.style.MineralGreen_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.lochinvar) -> {
-                setTheme(R.style.Lochinvar_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.beach_grey) -> {
-                setTheme(R.style.BeachGrey_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.cashmere) -> {
-                setTheme(R.style.Cashmere_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.grape) -> {
-                setTheme(R.style.Grape_Transparent)
-            }
-            ContextCompat.getColor(baseContext, R.color.roman_silver) -> {
-                setTheme(R.style.RomanSilver_Transparent)
-            }
-            else -> {
-                setTheme(R.style.Inure_Transparent)
-                AppearancePreferences.setAccentColor(ContextCompat.getColor(baseContext, R.color.inure))
-            }
-        }
     }
 
     @Suppress("Deprecation")
@@ -147,11 +59,8 @@ open class TransparentBaseActivity : AppCompatActivity(), ThemeChangedListener {
         window.statusBarColor = Color.TRANSPARENT
 
         if (Build.VERSION.SDK_INT in 23..29) {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            WindowCompat.setDecorFitsSystemWindows(window, true)
         } else if (Build.VERSION.SDK_INT >= 30) {
-            // Making status bar overlaps with the activity
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
 

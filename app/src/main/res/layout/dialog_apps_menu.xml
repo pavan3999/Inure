@@ -1,27 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:maxHeight="@dimen/dialog_height">
 
-    <app.simple.inure.decorations.corners.DynamicCornersNestedScrollView
+    <app.simple.inure.decorations.corners.DynamicCornersNestedScrollView xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dialog_height"
-        android:layout_margin="@dimen/dialog_padding"
+        android:layout_height="wrap_content"
         android:fadingEdge="vertical"
         android:fadingEdgeLength="20dp"
         android:padding="@dimen/dialog_padding"
-        android:requiresFadingEdge="vertical">
+        android:requiresFadingEdge="vertical"
+        app:layout_behavior="@string/over_scroll_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <include layout="@layout/sub_app_header" />
+
             <app.simple.inure.decorations.ripple.DynamicRippleTextView
                 android:id="@+id/copy_package_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="@dimen/popup_item_gap_length"
                 android:padding="@dimen/menu_text_button_padding"
                 android:text="@string/copy_package_name"
                 android:textSize="@dimen/popup_text_size"
@@ -32,6 +36,7 @@
                 android:id="@+id/launch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/popup_item_gap_length"
                 android:padding="@dimen/menu_text_button_padding"
                 android:text="@string/launch"
                 android:textSize="@dimen/popup_text_size"
@@ -42,6 +47,7 @@
                 android:id="@+id/app_information"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/popup_item_gap_length"
                 android:gravity="center_vertical"
                 android:padding="@dimen/menu_text_button_padding"
                 android:text="@string/app_information"
@@ -60,6 +66,8 @@
                 android:text="@string/send"
                 android:textSize="@dimen/popup_text_size"
                 app:appFontStyle="bold"
+                app:drawableTintStyle="accent"
+                app:drawableEndCompat="@drawable/ic_dot_tiny"
                 app:textColorStyle="secondary" />
 
             <app.simple.inure.decorations.theme.ThemeDivider
@@ -76,6 +84,8 @@
                     android:id="@+id/permissions"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/popup_item_gap_length"
+                    android:layout_marginBottom="@dimen/popup_item_gap_length"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:padding="@dimen/menu_text_button_padding"
@@ -90,6 +100,7 @@
                     android:id="@+id/activities"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/popup_item_gap_length"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:padding="@dimen/menu_text_button_padding"
@@ -111,6 +122,8 @@
                     android:id="@+id/services"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/popup_item_gap_length"
+                    android:layout_marginBottom="@dimen/popup_item_gap_length"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:padding="@dimen/menu_text_button_padding"
@@ -125,6 +138,7 @@
                     android:id="@+id/receivers"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/popup_item_gap_length"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:padding="@dimen/menu_text_button_padding"
@@ -159,6 +173,7 @@
                 android:id="@+id/manifest"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/popup_item_gap_length"
                 android:gravity="center_vertical"
                 android:padding="@dimen/menu_text_button_padding"
                 android:text="@string/manifest"
@@ -168,6 +183,17 @@
                 app:drawableTintStyle="accent"
                 app:textColorStyle="secondary" />
 
+            <app.simple.inure.decorations.ripple.DynamicRippleTextView
+                android:id="@+id/to_quick_app"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:padding="@dimen/menu_text_button_padding"
+                android:text="@string/add_to_quick_apps"
+                android:textSize="@dimen/popup_text_size"
+                app:appFontStyle="bold"
+                app:textColorStyle="secondary" />
+
         </LinearLayout>
     </app.simple.inure.decorations.corners.DynamicCornersNestedScrollView>
-</FrameLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

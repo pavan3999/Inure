@@ -12,7 +12,7 @@ import android.widget.LinearLayout
 import androidx.annotation.ColorInt
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import app.simple.inure.R
-import app.simple.inure.R.*
+import app.simple.inure.R.dimen
 import app.simple.inure.preferences.AppearancePreferences
 import app.simple.inure.preferences.BehaviourPreferences
 import app.simple.inure.util.ColorUtils.resolveAttrColor
@@ -82,6 +82,38 @@ object ViewUtils {
     fun View.gone() {
         clearAnimation()
         this.visibility = View.GONE
+    }
+
+    fun View.gone(animate: Boolean) {
+        if (animate) {
+            clearAnimation()
+            this.animate()
+                .scaleY(0.8F)
+                .scaleX(0.8F)
+                .alpha(0F)
+                .setInterpolator(AccelerateInterpolator())
+                .setDuration(this.resources.getInteger(R.integer.animation_duration).toLong())
+                .setListener(object : Animator.AnimatorListener {
+                    override fun onAnimationStart(animation: Animator?) {
+                        /* no-op */
+                    }
+
+                    override fun onAnimationEnd(animation: Animator?) {
+                        this@gone.visibility = View.GONE
+                    }
+
+                    override fun onAnimationCancel(animation: Animator?) {
+                        /* no-op */
+                    }
+
+                    override fun onAnimationRepeat(animation: Animator?) {
+                        /* no-op */
+                    }
+                })
+                .start()
+        } else {
+            this.visibility = View.GONE
+        }
     }
 
     /**
@@ -156,5 +188,32 @@ object ViewUtils {
         } else {
             this.visibility = View.VISIBLE
         }
+    }
+
+    // ViewExtensions
+
+    fun View.fadOutAnimation(duration: Long = 300, visibility: Int = View.INVISIBLE, completion: (() -> Unit)? = null) {
+        animate()
+            .alpha(0f)
+            .setDuration(duration)
+            .withEndAction {
+                this.visibility = visibility
+                completion?.let {
+                    it()
+                }
+            }
+    }
+
+    fun View.fadInAnimation(duration: Long = 300, completion: (() -> Unit)? = null) {
+        alpha = 0f
+        visibility = View.VISIBLE
+        animate()
+            .alpha(1f)
+            .setDuration(duration)
+            .withEndAction {
+                completion?.let {
+                    it()
+                }
+            }
     }
 }

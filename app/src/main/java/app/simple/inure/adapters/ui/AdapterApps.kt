@@ -17,6 +17,7 @@ import app.simple.inure.glide.util.ImageLoader.loadAppIcon
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
 import app.simple.inure.util.AdapterUtils.searchHighlighter
 
+@Deprecated("not in use anymore")
 class AdapterApps : RecyclerView.Adapter<AdapterApps.Holder>(), PopupTextProvider {
 
     private lateinit var appsAdapterCallbacks: AppsAdapterCallbacks
@@ -45,7 +46,7 @@ class AdapterApps : RecyclerView.Adapter<AdapterApps.Holder>(), PopupTextProvide
         }
 
         holder.container.setOnLongClickListener {
-            appsAdapterCallbacks.onAppLongPress(apps[position], it, holder.icon, position)
+            appsAdapterCallbacks.onAppLongPressed(apps[position], holder.icon)
             true
         }
     }
