@@ -10,6 +10,7 @@ import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.adapters.details.AdapterResources
+import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
@@ -42,9 +43,9 @@ class Resources : ScopedFragment() {
         searchBox = view.findViewById(R.id.resources_search)
         title = view.findViewById(R.id.resources_title)
         recyclerView = view.findViewById(R.id.resources_recycler_view)
-        packageInfo = requireArguments().getParcelable("application_info")!!
+        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
         packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        componentsViewModel = ViewModelProvider(this, packageInfoFactory).get(ApkDataViewModel::class.java)
+        componentsViewModel = ViewModelProvider(this, packageInfoFactory)[ApkDataViewModel::class.java]
 
         searchBoxState()
         startPostponedEnterTransition()
@@ -56,7 +57,7 @@ class Resources : ScopedFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         componentsViewModel.getResources().observe(viewLifecycleOwner) {
-            val adapterResources = AdapterResources(it, searchBox.text.toString())
+            val adapterResources = AdapterResources(it, searchBox.text.toString().trim())
 
             recyclerView.adapter = adapterResources
 
@@ -79,13 +80,19 @@ class Resources : ScopedFragment() {
                     clearExitTransition()
 
                     FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                TextViewer.newInstance(packageInfo, path),
+                                                Text.newInstance(packageInfo, path),
                                                 "txt_tv_xml")
                 }
             })
+
+            searchBox.doOnTextChanged { text, _, _, _ ->
+                if (searchBox.isFocused) {
+                    componentsViewModel.getResourceData(text.toString().trim())
+                }
+            }
         }
 
-        componentsViewModel.getError().observe(viewLifecycleOwner, {
+        componentsViewModel.getError().observe(viewLifecycleOwner) {
             val e = Error.newInstance(it)
             e.show(childFragmentManager, "error_dialog")
             e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
@@ -93,7 +100,7 @@ class Resources : ScopedFragment() {
                     requireActivity().onBackPressed()
                 }
             })
-        })
+        }
 
         options.setOnClickListener {
 
@@ -104,12 +111,6 @@ class Resources : ScopedFragment() {
                 ResourcesPreferences.setSearchVisibility(!ResourcesPreferences.isSearchVisible())
             } else {
                 searchBox.text?.clear()
-            }
-        }
-
-        searchBox.doOnTextChanged { text, _, _, _ ->
-            if (searchBox.isFocused) {
-                componentsViewModel.getResourceData(text.toString())
             }
         }
     }
@@ -139,7 +140,7 @@ class Resources : ScopedFragment() {
     companion object {
         fun newInstance(applicationInfo: PackageInfo): Resources {
             val args = Bundle()
-            args.putParcelable("application_info", applicationInfo)
+            args.putParcelable(BundleConstants.packageInfo, applicationInfo)
             val fragment = Resources()
             fragment.arguments = args
             return fragment

@@ -55,6 +55,7 @@ class CheckBox @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
             }
         }
 
+        unchecked()
         requestLayout()
     }
 
@@ -183,8 +184,12 @@ class CheckBox @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
         ThemeManager.addListener(this)
     }
 
-    override fun onThemeChanged(theme: Theme) {
-        if (!isChecked) animateUnchecked()
+    override fun onThemeChanged(theme: Theme, animate: Boolean) {
+        if (!isChecked) {
+            if (animate) {
+                animateUnchecked()
+            }
+        }
     }
 
     override fun onDetachedFromWindow() {

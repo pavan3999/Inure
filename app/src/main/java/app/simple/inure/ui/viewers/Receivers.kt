@@ -61,8 +61,8 @@ class Receivers : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        receiversViewModel.getReceivers().observe(viewLifecycleOwner, {
-            adapterReceivers = AdapterReceivers(it, packageInfo, searchBox.text.toString())
+        receiversViewModel.getReceivers().observe(viewLifecycleOwner) {
+            adapterReceivers = AdapterReceivers(it, packageInfo, searchBox.text.toString().trim())
             recyclerView.adapter = adapterReceivers
 
             adapterReceivers?.setOnReceiversCallbackListener(object : AdapterReceivers.Companion.ReceiversCallbacks {
@@ -74,28 +74,34 @@ class Receivers : ScopedFragment() {
                 }
 
                 override fun onReceiverLongPressed(packageId: String, packageInfo: PackageInfo, icon: View, isComponentEnabled: Boolean, position: Int) {
-                    val v = PopupReceiversMenu(icon, isComponentEnabled)
+                    val popupReceiversMenu = PopupReceiversMenu(icon, isComponentEnabled)
 
-                    v.setOnMenuClickListener(object : PopupMenuCallback {
+                    popupReceiversMenu.setOnMenuClickListener(object : PopupMenuCallback {
                         override fun onMenuItemClicked(source: String) {
                             when (source) {
                                 getString(R.string.enable), getString(R.string.disable) -> {
-                                    val p = ComponentState.newInstance(packageInfo, packageId, isComponentEnabled)
-                                    p.setOnComponentStateChangeListener(object : ComponentState.Companion.ComponentStatusCallbacks {
+                                    val componentState = ComponentState.newInstance(packageInfo, packageId, isComponentEnabled)
+                                    componentState.setOnComponentStateChangeListener(object : ComponentState.Companion.ComponentStatusCallbacks {
                                         override fun onSuccess() {
                                             adapterReceivers?.notifyItemChanged(position)
                                         }
                                     })
-                                    p.show(childFragmentManager, "component_state")
+                                    componentState.show(childFragmentManager, "component_state")
                                 }
                             }
                         }
                     })
                 }
             })
-        })
 
-        receiversViewModel.getError().observe(viewLifecycleOwner, {
+            searchBox.doOnTextChanged { text, _, _, _ ->
+                if (searchBox.isFocused) {
+                    receiversViewModel.getReceiversData(text.toString().trim())
+                }
+            }
+        }
+
+        receiversViewModel.getError().observe(viewLifecycleOwner) {
             val e = Error.newInstance(it)
             e.show(childFragmentManager, "error_dialog")
             e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
@@ -103,19 +109,13 @@ class Receivers : ScopedFragment() {
                     requireActivity().onBackPressed()
                 }
             })
-        })
+        }
 
         search.setOnClickListener {
             if (searchBox.text.isNullOrEmpty()) {
                 ReceiversPreferences.setSearchVisibility(!ReceiversPreferences.isSearchVisible())
             } else {
                 searchBox.text?.clear()
-            }
-        }
-
-        searchBox.doOnTextChanged { text, _, _, _ ->
-            if (searchBox.isFocused) {
-                receiversViewModel.getReceiversData(text.toString())
             }
         }
     }

@@ -64,7 +64,7 @@ class Graphics : ScopedFragment() {
 
         graphicsViewModel.getGraphics().observe(viewLifecycleOwner) {
             if (recyclerView.adapter.isNull()) {
-                adapterGraphics = AdapterGraphics(packageInfo.applicationInfo.sourceDir, it, searchBox.text.toString())
+                adapterGraphics = AdapterGraphics(packageInfo.applicationInfo.sourceDir, it, searchBox.text.toString().trim())
                 recyclerView.adapter = adapterGraphics
 
                 adapterGraphics!!.setOnResourceClickListener(object : AdapterGraphics.GraphicsCallbacks {
@@ -89,9 +89,15 @@ class Graphics : ScopedFragment() {
             } else {
                 adapterGraphics?.updateData(it, keyword = searchBox.text.toString())
             }
+
+            searchBox.doOnTextChanged { text, _, _, _ ->
+                if (searchBox.isFocused) {
+                    graphicsViewModel.keyword = text.toString().trim()
+                }
+            }
         }
 
-        graphicsViewModel.getError().observe(viewLifecycleOwner, {
+        graphicsViewModel.getError().observe(viewLifecycleOwner) {
             val e = Error.newInstance(it)
             e.show(childFragmentManager, "error_dialog")
             e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
@@ -99,7 +105,7 @@ class Graphics : ScopedFragment() {
                     requireActivity().onBackPressed()
                 }
             })
-        })
+        }
 
         filter.setOnClickListener {
             PopupGraphicsFilter(it)
@@ -114,12 +120,6 @@ class Graphics : ScopedFragment() {
                 GraphicsPreferences.setSearchVisibility(!GraphicsPreferences.isSearchVisible())
             } else {
                 searchBox.text?.clear()
-            }
-        }
-
-        searchBox.doOnTextChanged { text, _, _, _ ->
-            if (searchBox.isFocused) {
-                graphicsViewModel.keyword = text.toString()
             }
         }
     }

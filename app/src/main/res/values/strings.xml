@@ -18,7 +18,7 @@
     <string name="both">Both</string>
     <string name="typeface_icon">Typeface Icon</string>
     <string name="app_typeface">App Typeface</string>
-    <string name="select_the_application_s_typeface">Change application\'s font style.</string>
+    <string name="desc_app_typeface">Change application\'s font style (English glyphs only).</string>
     <string name="appearance">Appearance</string>
     <string name="appearance_icon">Appearance Icon</string>
     <string name="total_apps">%1$s Apps</string>
@@ -45,7 +45,7 @@
     <string name="shadows_desc">Adds the nice looking accent colored ambient shadows to various elevated views of the app.\n\nOnly available in API 28 or above.</string>
     <string name="show_colored_shadows">Show Colored Shadows</string>
     <string name="configuration">Configuration</string>
-    <string name="theme_desc">Change whether the application uses dark or light mode.</string>
+    <string name="desc_application_theme">Change whether the application uses dark or light mode.</string>
     <string name="application_theme">Application Theme</string>
     <string name="follow_system">Follow System</string>
     <string name="dark">Dark</string>
@@ -90,7 +90,7 @@
     <string name="sign_algorithm_oid">Sign Algorithm OID</string>
     <string name="public_key">Public Key</string>
     <string name="information">Information</string>
-    <string name="us_xml_viewer_desc">Use WebView based Xml Viewer instead of TextView to view Xml resource files.</string>
+    <string name="use_webview_xml_viewer_desc">Use WebView based Xml Viewer instead of TextView to view Xml resource files.</string>
     <string name="use_webview_xml_viewer"><strike>Use WebView Xml Viewer</strike></string>
     <string name="save">Save</string>
     <string name="copy">Copy</string>
@@ -172,9 +172,8 @@
     <string name="desc_storage_permission">Storage permission is required and used to perform various app actions such as sharing app, making backup files or associate with file available in external storage.</string>
     <string name="granted">Granted</string>
     <string name="rejected">Rejected</string>
-    <string name="start_app_now">Start App Now</string>
-    <string name="desc_setup">Before moving ahead it is recommended to perform the necessary actions to make the all the features of the app work.</string>
-    <string name="skip">Skip for Now</string>
+    <string name="desc_setup">Before moving ahead it is recommended to perform the necessary actions to make sure all the features of the app work.</string>
+    <string name="skip">Skip</string>
     <string name="executing_command">Executing Command…</string>
     <string name="force_stop">Force Stop</string>
     <string name="are_you_sure">Are You Sure?</string>
@@ -212,7 +211,7 @@
     <string name="transition_desc">Enables fade transition animation between panels. Turning this off is recommended because this will make the other animations of the UI snappier.\n\nThis option does not override if animations are disabled by the System itself.</string>
     <string name="transitions">Transitions</string>
     <string name="arc_animations">Arc Animations</string>
-    <string name="desc_animations">Enables or Disables circular path animations for the icons.\n\nThis option does not override if animations are disabled by the System itself.</string>
+    <string name="desc_arc_animations">Enables or Disables circular path animations for the icons.\n\nThis option does not override if animations are disabled by the System itself.</string>
     <string name="valid_to">Valid until</string>
     <string name="pdf_viewer">PDF Viewer</string>
     <string name="ttf_viewer">TTF Viewer</string>
@@ -387,7 +386,7 @@
     <string name="desc_translate">Contribute in translating the app into your regional language.</string>
     <string name="open_source_licenses">Open Source License</string>
     <string name="desc_licenses">List of licenses of the open source libraries used into development of this app.</string>
-    <string name="change_logs">Changes Logs</string>
+    <string name="change_logs">Change Logs</string>
     <string name="desc_changelogs">Check changes and improvements in the current version of the apps and plans for the future updates.</string>
     <string name="accent_for_nav">Accent Color on Navigation Bar</string>
     <string name="desc_accent_on_nav">Apply accent color on Navigation Bar instead of using system specified backgrounds.</string>
@@ -496,4 +495,25 @@
     <string name="viewers">Viewers</string>
     <string name="full_screen_audio_player">Full Screen Audio Player</string>
     <string name="desc_full_screen_audio_player">Use full screen audio player instead of the modal window dialog.</string>
+    <string name="start_app_now">Start App Now</string>
+    <string name="auto_save">Auto Save</string>
+    <string name="edited_on">Edited on %1$s</string>
+    <string name="stroke">Stroke</string>
+    <string name="desc_highlight_stroke">Add stroke on all the clickable items having static backgrounds set as background.</string>
+    <string name="desc_development_prefs">These preferences/features are only added for the convenience of the development and may or may not serve the actual purpose of the app but can still come handy.</string>
+    <string name="shortcuts">Shortcuts</string>
+    <string name="shortcuts_desc">Edit app\'s quick shortcuts.</string>
+    <string name="architecture">Architecture</string>
+    <string name="native_libraries">Native Libraries</string>
+    <string name="toggleable">Toggleable</string>
+    <string name="options">Options</string>
+    <string name="link">Link</string>
+    <string name="popup">Popup</string>
+    <string name="multi_toggleable">Multi Toggleable</string>
+    <string name="web_page">Web Page</string>
+    <string name="hide_preferences_indicators">Hide Preferences Indicators</string>
+    <string name="desc_hide_preferences_indicators">Hide the preference type indicator from all preference titles.</string>
+    <string name="trackers">Trackers</string>
+    <string name="scan">Scan</string>
+    <string name="exodus">εxodus</string>
 </resources>

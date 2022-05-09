@@ -88,8 +88,8 @@ object ViewUtils {
         if (animate) {
             clearAnimation()
             this.animate()
-                .scaleY(0.8F)
-                .scaleX(0.8F)
+                .scaleY(0F)
+                .scaleX(0F)
                 .alpha(0F)
                 .setInterpolator(AccelerateInterpolator())
                 .setDuration(this.resources.getInteger(R.integer.animation_duration).toLong())
@@ -159,11 +159,14 @@ object ViewUtils {
      * @param animate adds animation to the process
      */
     fun View.visible(animate: Boolean) {
+        if (visibility == View.VISIBLE) return
+
         if (animate) {
             clearAnimation()
+
             this.animate()
-                .scaleY(1F)
                 .scaleX(1F)
+                .scaleY(1F)
                 .alpha(1F)
                 .setInterpolator(LinearOutSlowInInterpolator())
                 .setDuration(this.resources.getInteger(R.integer.animation_duration).toLong())

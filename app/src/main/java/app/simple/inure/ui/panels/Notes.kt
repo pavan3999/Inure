@@ -10,11 +10,13 @@ import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.adapters.ui.AdapterNotes
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
+import app.simple.inure.dialogs.app.Sure
 import app.simple.inure.dialogs.menus.NotesMenu
 import app.simple.inure.extension.fragments.ScopedFragment
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
 import app.simple.inure.models.NotesPackageInfo
 import app.simple.inure.preferences.NotesPreferences
+import app.simple.inure.ui.viewers.Note
 import app.simple.inure.util.FragmentHelper
 import app.simple.inure.viewmodels.panels.NotesViewModel
 
@@ -46,6 +48,13 @@ class Notes : ScopedFragment() {
                     clearExitTransition()
                     FragmentHelper.openFragment(requireActivity().supportFragmentManager,
                                                 NotesEditor.newInstance(notesPackageInfo.packageInfo),
+                                                "notes_editor")
+                }
+
+                override fun onNoteLongClicked(notesPackageInfo: NotesPackageInfo) {
+                    clearExitTransition()
+                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
+                                                Note.newInstance(notesPackageInfo.packageInfo),
                                                 "notes_viewer")
                 }
 
@@ -59,6 +68,18 @@ class Notes : ScopedFragment() {
                 override fun onSettingsPressed(view: View) {
                     NotesMenu.newInstance()
                         .show(childFragmentManager, "notes_menu")
+                }
+
+                override fun onNoteDelete(view: View, notesPackageInfo: NotesPackageInfo?) {
+                    val p = Sure.newInstance()
+
+                    p.setOnSureCallbackListener(object : Sure.Companion.SureCallbacks {
+                        override fun onSure() {
+                            notesViewModel.deleteNoteData(notesPackageInfo)
+                        }
+                    })
+
+                    p.show(childFragmentManager, "sure")
                 }
             })
 

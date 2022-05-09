@@ -8,10 +8,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.Nullable;
-import app.simple.inure.R;
 import app.simple.inure.decorations.corners.LayoutBackground;
 import app.simple.inure.themes.manager.ThemeManager;
-import app.simple.inure.util.ColorUtils;
 import app.simple.inure.util.ViewUtils;
 
 public class TypeFaceEditTextDynamicCorner extends TypeFaceEditText {
@@ -36,7 +34,6 @@ public class TypeFaceEditTextDynamicCorner extends TypeFaceEditText {
         setBackgroundTintList(ColorStateList.valueOf(ThemeManager.INSTANCE.getTheme().getViewGroupTheme().getViewerBackground()));
         LayoutBackground.setBackground(getContext(), this, attrs, 2F);
         ViewUtils.INSTANCE.addShadow(this);
-        setHighlightColor(ColorUtils.INSTANCE.resolveAttrColor(getContext(), R.attr.colorAppAccentLight));
     }
     
     public void toggleInput() {
@@ -62,6 +59,12 @@ public class TypeFaceEditTextDynamicCorner extends TypeFaceEditText {
     public void hideInput() {
         clearFocus();
         ((InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE))
-                .hideSoftInputFromWindow(getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
+                .hideSoftInputFromWindow(getWindowToken(), InputMethodManager.RESULT_UNCHANGED_SHOWN);
+    }
+    
+    @Override
+    protected void onDetachedFromWindow() {
+        hideInput();
+        super.onDetachedFromWindow();
     }
 }

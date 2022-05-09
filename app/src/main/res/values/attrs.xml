@@ -60,6 +60,8 @@
             <flag name="regular" value="1" />
             <flag name="secondary" value="2" />
         </attr>
+
+        <attr name="isDrawableHidden" format="boolean" />
     </declare-styleable>
 
     <!-- Use <code>scale</code>as the root tag of the XML resource that
@@ -110,6 +112,7 @@
             <flag name="regular" value="0" />
             <flag name="secondary" value="1" />
             <flag name="accent" value="2" />
+            <flag name="custom" value="3" />
         </attr>
     </declare-styleable>
 
@@ -119,6 +122,7 @@
             <flag name="secondary" value="1" />
             <flag name="accent" value="2" />
             <flag name="white" value="3" />
+            <flag name="custom" value="-1" />
         </attr>
     </declare-styleable>
 </resources>

@@ -57,15 +57,15 @@ object FragmentHelper {
      * @param view [View] that needs to be animated
      * @param tag back stack tag for fragment
      */
-    fun openFragmentLinear(fragmentManager: FragmentManager, fragment: ScopedFragment, view: View, tag: String) {
-        fragment.setLinearTransitions()
+    fun openFragmentLinear(fragmentManager: FragmentManager, fragment: ScopedFragment, view: View, tag: String? = null, duration: Long? = null) {
+        fragment.setLinearTransitions(duration ?: view.resources.getInteger(R.integer.animation_duration).toLong())
 
         fragmentManager.beginTransaction()
-                .setReorderingAllowed(true)
-                .addSharedElement(view, view.transitionName)
-                .replace(R.id.app_container, fragment, tag)
-                .addToBackStack(tag)
-                .commit()
+            .setReorderingAllowed(true)
+            .addSharedElement(view, view.transitionName)
+            .replace(R.id.app_container, fragment, tag)
+            .addToBackStack(tag)
+            .commit()
     }
 
     /**
@@ -75,16 +75,16 @@ object FragmentHelper {
      * @param fragment [Fragment]
      * @param tag back stack tag for fragment
      */
-    fun openFragment(fragmentManager: FragmentManager, fragment: ScopedFragment, @Nullable tag: String) {
+    fun openFragment(fragmentManager: FragmentManager, fragment: ScopedFragment, @Nullable tag: String?) {
         fragment.clearExitTransition()
         fragment.clearEnterTransition()
 
         fragmentManager.beginTransaction()
-                .setReorderingAllowed(true)
-                .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
-                .replace(R.id.app_container, fragment, tag)
-                .addToBackStack(tag)
-                .commit()
+            .setReorderingAllowed(true)
+            .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
+            .replace(R.id.app_container, fragment, tag)
+            .addToBackStack(tag)
+            .commit()
     }
 
     /**

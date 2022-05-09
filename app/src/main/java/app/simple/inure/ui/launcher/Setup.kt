@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.AppOpsManagerCompat
@@ -80,9 +81,10 @@ class Setup : ScopedFragment() {
                     result.data?.data?.normalizeScheme().also {
                         requireActivity().contentResolver.takePersistableUriPermission(it!!, takeFlags)
                         MainPreferences.setStoragePermissionUri(it)
-                        showStartAppButton()
                         setStorageStatus(it)
                     }
+
+                    showStartAppButton()
                 }
                 Activity.RESULT_CANCELED -> {
                     showStartAppButton()
@@ -113,6 +115,8 @@ class Setup : ScopedFragment() {
                 FragmentHelper.openFragment(
                         requireActivity().supportFragmentManager,
                         SplashScreen.newInstance(false), view.findViewById(R.id.imageView3))
+            } else {
+                Toast.makeText(requireContext(), R.string.ss_please_grant_storage_permission, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -163,6 +167,7 @@ class Setup : ScopedFragment() {
         }.onFailure {
             setStorageStatus(null)
         }
+
         showStartAppButton()
     }
 
@@ -182,6 +187,7 @@ class Setup : ScopedFragment() {
             @Suppress("Deprecation")
             appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), requireContext().packageName)
         }
+
         return mode == AppOpsManagerCompat.MODE_ALLOWED
     }
 

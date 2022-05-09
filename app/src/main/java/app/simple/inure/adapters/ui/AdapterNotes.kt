@@ -20,15 +20,16 @@ import app.simple.inure.glide.util.ImageLoader.loadAppIcon
 import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
 import app.simple.inure.models.NotesPackageInfo
 import app.simple.inure.preferences.NotesPreferences
+import app.simple.inure.util.DateUtils
 
-class AdapterNotes(var apps: ArrayList<NotesPackageInfo>) : RecyclerView.Adapter<VerticalListViewHolder>() {
+class AdapterNotes(var notes: ArrayList<NotesPackageInfo>) : RecyclerView.Adapter<VerticalListViewHolder>() {
 
     private var appsAdapterCallbacks: AppsAdapterCallbacks? = null
 
     var areNotesExpanded = NotesPreferences.areNotesExpanded()
         set(value) {
             field = value
-            for (i in apps.indices) {
+            for (i in notes.indices) {
                 notifyItemChanged(i.plus(1))
             }
         }
@@ -55,11 +56,11 @@ class AdapterNotes(var apps: ArrayList<NotesPackageInfo>) : RecyclerView.Adapter
 
         if (holder is Holder) {
             holder.icon.transitionName = "app_$position"
-            holder.icon.loadAppIcon(apps[position].packageInfo.packageName)
-            holder.name.text = apps[position].packageInfo.applicationInfo.name
-            holder.packageId.text = apps[position].packageInfo.packageName
+            holder.icon.loadAppIcon(notes[position].packageInfo.packageName)
+            holder.name.text = notes[position].packageInfo.applicationInfo.name
+            holder.packageId.text = notes[position].packageInfo.packageName
 
-            holder.note.text = apps[position].note
+            holder.note.text = notes[position].note
 
             if (areNotesExpanded) {
                 holder.note.maxLines = Int.MAX_VALUE
@@ -67,18 +68,24 @@ class AdapterNotes(var apps: ArrayList<NotesPackageInfo>) : RecyclerView.Adapter
                 holder.note.maxLines = 7
             }
 
-            if (apps[position].packageInfo.applicationInfo.enabled) {
+            holder.updated.text = holder.context.getString(R.string.edited_on, DateUtils.formatDate(notes[position].dateUpdated))
+
+            if (notes[position].packageInfo.applicationInfo.enabled) {
                 holder.name.paintFlags = holder.name.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
             } else {
                 holder.name.paintFlags = holder.name.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             }
 
+            holder.delete.setOnClickListener {
+                appsAdapterCallbacks?.onNoteDelete(it, notes[position])
+            }
+
             holder.container.setOnClickListener {
-                appsAdapterCallbacks?.onNoteClicked(apps[position])
+                appsAdapterCallbacks?.onNoteClicked(notes[position])
             }
 
             holder.container.setOnLongClickListener {
-                appsAdapterCallbacks?.onAppLongPressed(apps[position].packageInfo, holder.icon)
+                appsAdapterCallbacks?.onNoteLongClicked(notes[position])
                 true
             }
         }
@@ -92,7 +99,7 @@ class AdapterNotes(var apps: ArrayList<NotesPackageInfo>) : RecyclerView.Adapter
                 appsAdapterCallbacks?.onSettingsPressed(it)
             }
 
-            holder.total.text = String.format(holder.itemView.context.getString(R.string.total_apps), apps.size)
+            holder.total.text = String.format(holder.itemView.context.getString(R.string.total_apps), notes.size)
         }
     }
 
@@ -107,7 +114,7 @@ class AdapterNotes(var apps: ArrayList<NotesPackageInfo>) : RecyclerView.Adapter
     }
 
     override fun getItemCount(): Int {
-        return apps.size + 1
+        return notes.size + 1
     }
 
     override fun getItemId(position: Int): Long {
@@ -127,7 +134,9 @@ class AdapterNotes(var apps: ArrayList<NotesPackageInfo>) : RecyclerView.Adapter
     inner class Holder(itemView: View) : VerticalListViewHolder(itemView) {
         val icon: ImageView = itemView.findViewById(R.id.adapter_all_app_icon)
         val name: TypeFaceTextView = itemView.findViewById(R.id.adapter_all_app_name)
-        val packageId: TypeFaceTextView = itemView.findViewById(R.id.adapter_recently_app_package_id)
+        val packageId: TypeFaceTextView = itemView.findViewById(R.id.adapter_notes_package_id)
+        val updated: TypeFaceTextView = itemView.findViewById(R.id.adapter_notes_updated)
+        val delete: DynamicRippleImageButton = itemView.findViewById(R.id.adapter_delete_button)
         val note: TypeFaceTextView = itemView.findViewById(R.id.adapter_note)
         val container: DynamicRippleConstraintLayout = itemView.findViewById(R.id.adapter_all_app_container)
     }

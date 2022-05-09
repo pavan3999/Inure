@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<app.simple.inure.decorations.padding.PaddingAwareLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:orientation="vertical"
     android:paddingHorizontal="@dimen/panel_padding_horizontal">
 
-    <app.simple.inure.decorations.theme.ThemeLinearLayout
+    <app.simple.inure.decorations.padding.PaddingAwareLinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:animateLayoutChanges="true"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="1dp"
         android:orientation="horizontal"
         android:padding="@dimen/header_padding">
 
@@ -18,23 +24,50 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="@dimen/header_padding"
             android:padding="10dp"
             android:src="@drawable/ic_app_icon_settings"
             android:transitionName="main_app_icon"
             tools:ignore="ContentDescription" />
 
         <app.simple.inure.decorations.typeface.TypeFaceTextView
-            android:layout_width="match_parent"
+            android:id="@+id/preferences_title"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
             android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/popup_padding"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
             android:text="@string/preferences"
-            app:textColorStyle="heading"
             android:textSize="@dimen/header_font_size"
-            app:appFontStyle="bold" />
+            app:appFontStyle="bold"
+            app:textColorStyle="heading" />
 
-    </app.simple.inure.decorations.theme.ThemeLinearLayout>
+        <app.simple.inure.decorations.ripple.DynamicRippleImageButton
+            android:id="@+id/preferences_search_btn"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/popup_padding"
+            android:src="@drawable/ic_search"
+            app:buttonTintType="accent" />
+
+        <app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+            android:id="@+id/preferences_search"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="5dp"
+            android:layout_weight="1"
+            android:elevation="@dimen/dialog_elevation"
+            android:maxHeight="50dp"
+            android:maxLines="1"
+            android:paddingHorizontal="@dimen/header_padding"
+            android:textCursorDrawable="@drawable/text_cursor"
+            android:visibility="gone"
+            app:appFontStyle="regular"
+            app:textColorStyle="secondary" />
+
+    </app.simple.inure.decorations.padding.PaddingAwareLinearLayout>
 
     <app.simple.inure.decorations.theme.ThemeDivider
         android:layout_width="match_parent"
@@ -44,7 +77,8 @@
         android:id="@+id/preferences_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:statusBarPaddingRequired="false"
-        android:layoutAnimation="@anim/list_animation_controller" />
+        android:layoutAnimation="@anim/list_animation_controller"
+        app:isFastScrollRequired="false"
+        app:statusBarPaddingRequired="false" />
 
-</app.simple.inure.decorations.padding.PaddingAwareLinearLayout>
+</LinearLayout>

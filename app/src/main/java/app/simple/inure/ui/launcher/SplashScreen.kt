@@ -61,24 +61,18 @@ class SplashScreen : ScopedFragment() {
 
         // (icon.drawable as AnimatedVectorDrawable).start()
 
-        when {
-            requireArguments().getBoolean("skip") -> {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    delay(500) // Make sure the animation finishes
+        viewLifecycleOwner.lifecycleScope.launch {
+            delay(500)
+
+            when {
+                requireArguments().getBoolean("skip") -> {
                     proceed()
                 }
-            }
-            !checkForPermission() -> {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    delay(500) // Make sure the animation runs
-                    openFragment(
-                            requireActivity().supportFragmentManager,
-                            Setup.newInstance(), view.findViewById(R.id.imageView))
+                !checkForPermission() -> {
+                    openFragment(requireActivity().supportFragmentManager,
+                                 Setup.newInstance(), icon)
                 }
-            }
-            else -> {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    delay(500) // Make sure the animation finishes
+                else -> {
                     proceed()
                 }
             }

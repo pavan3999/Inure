@@ -50,7 +50,7 @@ class Services : ScopedFragment() {
 
         packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
         packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        servicesViewModel = ViewModelProvider(this, packageInfoFactory).get(ServicesViewModel::class.java)
+        servicesViewModel = ViewModelProvider(this, packageInfoFactory)[ServicesViewModel::class.java]
 
         searchBoxState()
         startPostponedEnterTransition()
@@ -61,8 +61,8 @@ class Services : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        servicesViewModel.getServices().observe(viewLifecycleOwner, {
-            adapterServices = AdapterServices(it, packageInfo, searchBox.text.toString())
+        servicesViewModel.getServices().observe(viewLifecycleOwner) {
+            adapterServices = AdapterServices(it, packageInfo, searchBox.text.toString().trim())
             recyclerView.adapter = adapterServices
 
             adapterServices?.setOnServiceCallbackListener(object : AdapterServices.Companion.ServicesCallbacks {
@@ -93,9 +93,15 @@ class Services : ScopedFragment() {
                     })
                 }
             })
-        })
 
-        servicesViewModel.getError().observe(viewLifecycleOwner, {
+            searchBox.doOnTextChanged { text, _, _, _ ->
+                if (searchBox.isFocused) {
+                    servicesViewModel.getServicesData(text.toString().trim())
+                }
+            }
+        }
+
+        servicesViewModel.getError().observe(viewLifecycleOwner) {
             val e = Error.newInstance(it)
             e.show(childFragmentManager, "error_dialog")
             e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
@@ -103,19 +109,13 @@ class Services : ScopedFragment() {
                     requireActivity().onBackPressed()
                 }
             })
-        })
+        }
 
         search.setOnClickListener {
             if (searchBox.text.isNullOrEmpty()) {
                 ServicesPreferences.setSearchVisibility(!ServicesPreferences.isSearchVisible())
             } else {
                 searchBox.text?.clear()
-            }
-        }
-
-        searchBox.doOnTextChanged { text, _, _, _ ->
-            if (searchBox.isFocused) {
-                servicesViewModel.getServicesData(text.toString())
             }
         }
     }

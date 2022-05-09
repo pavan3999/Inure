@@ -22,15 +22,15 @@ class PopupAppsCategory(view: View) : BasePopupWindow() {
         user = contentView.findViewById(R.id.popup_category_user)
         both = contentView.findViewById(R.id.popup_category_both)
 
+        system.onClick(SYSTEM)
+        user.onClick(USER)
+        both.onClick(BOTH)
+
         when (MainPreferences.getAppsCategory()) {
             USER -> user.isSelected = true
             SYSTEM -> system.isSelected = true
             BOTH -> both.isSelected = true
         }
-
-        system.onClick(SYSTEM)
-        user.onClick(USER)
-        both.onClick(BOTH)
 
         init(contentView, view)
     }

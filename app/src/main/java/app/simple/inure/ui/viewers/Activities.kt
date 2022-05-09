@@ -64,8 +64,8 @@ class Activities : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        activitiesViewModel.getActivities().observe(viewLifecycleOwner, { it ->
-            adapterActivities = AdapterActivities(packageInfo, it, searchBox.text.toString())
+        activitiesViewModel.getActivities().observe(viewLifecycleOwner) { it ->
+            adapterActivities = AdapterActivities(packageInfo, it, searchBox.text.toString().trim())
             recyclerView.adapter = adapterActivities
 
             adapterActivities?.setOnActivitiesCallbacks(object : AdapterActivities.Companion.ActivitiesCallbacks {
@@ -107,13 +107,19 @@ class Activities : ScopedFragment() {
                         ActivityUtils.launchPackage(requireContext(), packageName, name)
                     }.getOrElse {
                         Error.newInstance(it.message ?: getString(R.string.unknown))
-                                .show(childFragmentManager, "error_dialog")
+                            .show(childFragmentManager, "error_dialog")
                     }
                 }
             })
-        })
 
-        activitiesViewModel.getError().observe(viewLifecycleOwner, {
+            searchBox.doOnTextChanged { text, _, _, _ ->
+                if (searchBox.isFocused) {
+                    activitiesViewModel.getActivitiesData(text.toString().trim())
+                }
+            }
+        }
+
+        activitiesViewModel.getError().observe(viewLifecycleOwner) {
             val e = Error.newInstance(it)
             e.show(childFragmentManager, "error_dialog")
             e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
@@ -121,19 +127,13 @@ class Activities : ScopedFragment() {
                     requireActivity().onBackPressed()
                 }
             })
-        })
+        }
 
         search.setOnClickListener {
             if (searchBox.text.isNullOrEmpty()) {
                 ActivitiesPreferences.setSearchVisibility(!ActivitiesPreferences.isSearchVisible())
             } else {
                 searchBox.text?.clear()
-            }
-        }
-
-        searchBox.doOnTextChanged { text, _, _, _ ->
-            if (searchBox.isFocused) {
-                activitiesViewModel.getActivitiesData(text.toString())
             }
         }
     }
