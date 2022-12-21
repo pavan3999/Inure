@@ -10,6 +10,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import app.simple.inure.R
 import app.simple.inure.constants.ThemeConstants
 import app.simple.inure.preferences.AppearancePreferences
+import app.simple.inure.themes.data.MaterialYou
 import app.simple.inure.themes.manager.Theme
 import app.simple.inure.themes.manager.ThemeManager
 import java.util.*
@@ -20,6 +21,9 @@ object ThemeUtils {
             ThemeConstants.LIGHT_THEME -> {
                 ThemeManager.theme = Theme.LIGHT
             }
+            ThemeConstants.SOAPSTONE -> {
+                ThemeManager.theme = Theme.SOAPSTONE
+            }
             ThemeConstants.DARK_THEME -> {
                 ThemeManager.theme = Theme.DARK
             }
@@ -28,6 +32,9 @@ object ThemeUtils {
             }
             ThemeConstants.SLATE -> {
                 ThemeManager.theme = Theme.SLATE
+            }
+            ThemeConstants.OIL -> {
+                ThemeManager.theme = Theme.OIL
             }
             ThemeConstants.HIGH_CONTRAST -> {
                 ThemeManager.theme = Theme.HIGH_CONTRAST
@@ -48,10 +55,20 @@ object ThemeUtils {
                             ThemeConstants.HIGH_CONTRAST -> {
                                 ThemeManager.theme = Theme.HIGH_CONTRAST
                             }
+                            ThemeConstants.OIL -> {
+                                ThemeManager.theme = Theme.OIL
+                            }
                         }
                     }
                     Configuration.UI_MODE_NIGHT_NO -> {
-                        ThemeManager.theme = Theme.LIGHT
+                        when (AppearancePreferences.getLastLightTheme()) {
+                            ThemeConstants.LIGHT_THEME -> {
+                                ThemeManager.theme = Theme.LIGHT
+                            }
+                            ThemeConstants.SOAPSTONE -> {
+                                ThemeManager.theme = Theme.SOAPSTONE
+                            }
+                        }
                     }
                     Configuration.UI_MODE_NIGHT_UNDEFINED -> {
                         ThemeManager.theme = Theme.LIGHT
@@ -74,9 +91,26 @@ object ThemeUtils {
                         ThemeConstants.HIGH_CONTRAST -> {
                             ThemeManager.theme = Theme.HIGH_CONTRAST
                         }
+                        ThemeConstants.OIL -> {
+                            ThemeManager.theme = Theme.OIL
+                        }
                     }
                 } else if (calendar < 18 || calendar > 6) {
-                    ThemeManager.theme = Theme.LIGHT
+                    when (AppearancePreferences.getLastLightTheme()) {
+                        ThemeConstants.LIGHT_THEME -> {
+                            ThemeManager.theme = Theme.LIGHT
+                        }
+                        ThemeConstants.SOAPSTONE -> {
+                            ThemeManager.theme = Theme.SOAPSTONE
+                        }
+                    }
+                }
+            }
+            ThemeConstants.MATERIAL_YOU -> {
+                if (isNightMode(resources)) {
+                    ThemeManager.theme = Theme.MATERIAL_YOU_DARK
+                } else {
+                    ThemeManager.theme = Theme.MATERIAL_YOU_LIGHT
                 }
             }
         }
@@ -84,15 +118,18 @@ object ThemeUtils {
 
     fun setBarColors(resources: Resources, window: Window) {
         when (AppearancePreferences.getTheme()) {
-            ThemeConstants.LIGHT_THEME -> {
+            ThemeConstants.LIGHT_THEME,
+            ThemeConstants.SOAPSTONE -> {
                 lightBars(window)
             }
             ThemeConstants.DARK_THEME,
             ThemeConstants.AMOLED,
             ThemeConstants.HIGH_CONTRAST,
-            ThemeConstants.SLATE -> {
+            ThemeConstants.SLATE,
+            ThemeConstants.OIL -> {
                 darkBars(window)
             }
+            ThemeConstants.MATERIAL_YOU,
             ThemeConstants.FOLLOW_SYSTEM -> {
                 when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
                     Configuration.UI_MODE_NIGHT_YES -> {
@@ -117,7 +154,7 @@ object ThemeUtils {
         }
     }
 
-    fun lightBars(window: Window) {
+    private fun lightBars(window: Window) {
         setStatusAndNavColors(window)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightNavigationBars = !AppearancePreferences.isAccentOnNavigationBar()
@@ -143,15 +180,18 @@ object ThemeUtils {
 
     fun isNightMode(resources: Resources): Boolean {
         when (AppearancePreferences.getTheme()) {
-            ThemeConstants.LIGHT_THEME -> {
+            ThemeConstants.LIGHT_THEME,
+            ThemeConstants.SOAPSTONE -> {
                 return false
             }
             ThemeConstants.DARK_THEME,
             ThemeConstants.AMOLED,
             ThemeConstants.HIGH_CONTRAST,
-            ThemeConstants.SLATE -> {
+            ThemeConstants.SLATE,
+            ThemeConstants.OIL -> {
                 return true
             }
+            ThemeConstants.MATERIAL_YOU,
             ThemeConstants.FOLLOW_SYSTEM -> {
                 when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
                     Configuration.UI_MODE_NIGHT_YES -> {
@@ -272,6 +312,9 @@ object ThemeUtils {
             ContextCompat.getColor(baseContext, R.color.limed_spruce) -> {
                 setTheme(R.style.LimedSpruce)
             }
+            ContextCompat.getColor(baseContext, MaterialYou.materialYouAccentResID) -> {
+                setTheme(R.style.MaterialYou)
+            }
             else -> {
                 setTheme(R.style.Inure)
                 AppearancePreferences.setAccentColor(ContextCompat.getColor(baseContext, R.color.inure))
@@ -364,6 +407,9 @@ object ThemeUtils {
             }
             ContextCompat.getColor(baseContext, R.color.limed_spruce) -> {
                 setTheme(R.style.LimedSpruce_Transparent)
+            }
+            ContextCompat.getColor(baseContext, MaterialYou.materialYouAccentResID) -> {
+                setTheme(R.style.MaterialYou_Transparent)
             }
             else -> {
                 setTheme(R.style.Inure_Transparent)

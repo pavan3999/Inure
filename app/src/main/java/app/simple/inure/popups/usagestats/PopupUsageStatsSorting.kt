@@ -3,10 +3,10 @@ package app.simple.inure.popups.usagestats
 import android.view.LayoutInflater
 import android.view.View
 import app.simple.inure.R
-import app.simple.inure.decorations.checkbox.CheckBox
+import app.simple.inure.decorations.checkbox.InureCheckBox
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
-import app.simple.inure.extension.popup.BasePopupWindow
-import app.simple.inure.extension.popup.PopupLinearLayout
+import app.simple.inure.extensions.popup.BasePopupWindow
+import app.simple.inure.extensions.popup.PopupLinearLayout
 import app.simple.inure.preferences.StatisticsPreferences
 import app.simple.inure.util.SortUsageStats
 
@@ -34,7 +34,7 @@ class PopupUsageStatsSorting(view: View) : BasePopupWindow() {
         }
 
         time.setOnClickListener {
-            setOnClick(SortUsageStats.TIME)
+            setOnClick(SortUsageStats.TIME_USED)
         }
 
         dataSent.setOnClickListener {
@@ -55,14 +55,14 @@ class PopupUsageStatsSorting(view: View) : BasePopupWindow() {
 
         when (StatisticsPreferences.getSortedBy()) {
             SortUsageStats.NAME -> name.isSelected = true
-            SortUsageStats.TIME -> time.isSelected = true
+            SortUsageStats.TIME_USED -> time.isSelected = true
             SortUsageStats.DATA_SENT -> dataSent.isSelected = true
             SortUsageStats.DATA_RECEIVED -> dataReceived.isSelected = true
             SortUsageStats.WIFI_SENT -> wifiSent.isSelected = true
             SortUsageStats.WIFI_RECEIVED -> wifiReceived.isSelected = true
         }
 
-        with(contentView.findViewById<CheckBox>(R.id.sort_reversed_checkbox)) {
+        with(contentView.findViewById<InureCheckBox>(R.id.sort_reversed_checkbox)) {
             setChecked(StatisticsPreferences.isReverseSorting())
 
             setOnCheckedChangeListener { isChecked ->

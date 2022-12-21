@@ -13,28 +13,17 @@ import app.simple.inure.adapters.details.AdapterExtras
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
-import app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
-import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.SearchBarScopedFragment
 import app.simple.inure.factories.panels.PackageInfoFactory
-import app.simple.inure.popups.viewers.PopupExtrasFilter
 import app.simple.inure.popups.viewers.PopupExtrasMenu
 import app.simple.inure.preferences.ExtrasPreferences
-import app.simple.inure.util.FragmentHelper
 import app.simple.inure.util.NullSafety.isNull
-import app.simple.inure.util.ViewUtils.gone
-import app.simple.inure.util.ViewUtils.visible
 import app.simple.inure.viewmodels.viewers.ExtrasViewModel
 
-class Extras : ScopedFragment() {
+class Extras : SearchBarScopedFragment() {
 
     private lateinit var recyclerView: CustomVerticalRecyclerView
-    private lateinit var filter: DynamicRippleImageButton
     private lateinit var options: DynamicRippleImageButton
-    private lateinit var search: DynamicRippleImageButton
-    private lateinit var title: TypeFaceTextView
-    private lateinit var searchBox: TypeFaceEditTextDynamicCorner
     private lateinit var extrasViewModel: ExtrasViewModel
     private lateinit var packageInfoFactory: PackageInfoFactory
     private var adapterExtras: AdapterExtras? = null
@@ -43,17 +32,15 @@ class Extras : ScopedFragment() {
         val view = inflater.inflate(R.layout.fragment_extras, container, false)
 
         recyclerView = view.findViewById(R.id.extras_recycler_view)
-        filter = view.findViewById(R.id.extras_filter)
         options = view.findViewById(R.id.extras_options)
         search = view.findViewById(R.id.extras_search_btn)
         searchBox = view.findViewById(R.id.extras_search)
         title = view.findViewById(R.id.extras_title)
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
 
-        packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        extrasViewModel = ViewModelProvider(this, packageInfoFactory).get(ExtrasViewModel::class.java)
+        packageInfoFactory = PackageInfoFactory(packageInfo)
+        extrasViewModel = ViewModelProvider(this, packageInfoFactory)[ExtrasViewModel::class.java]
 
-        searchBoxState()
+        searchBoxState(false, ExtrasPreferences.isSearchVisible())
         startPostponedEnterTransition()
 
         return view
@@ -69,33 +56,21 @@ class Extras : ScopedFragment() {
 
                 adapterExtras?.setOnResourceClickListener(object : AdapterExtras.ExtrasCallbacks {
                     override fun onExtrasClicked(path: String) {
-                        clearEnterTransition()
-                        clearExitTransition()
                         when {
                             path.endsWith(".ttf") -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            Font.newInstance(packageInfo, path),
-                                                            "ttf_viewer")
+                                openFragmentSlide(Font.newInstance(packageInfo, path), "ttf_viewer")
                             }
                             path.endsWith(".html") -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            HtmlViewer.newInstance(packageInfo, path),
-                                                            "html_viewer")
+                                openFragmentSlide(XMLViewerTextView.newInstance(packageInfo, false, path), "html_viewer")
                             }
                             path.endsWith(".java") -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            Java.newInstance(packageInfo, path),
-                                                            "java_viewer")
+                                openFragmentSlide(Java.newInstance(packageInfo, path), "java_viewer")
                             }
                             path.endsWith(".md") -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            Markdown.newInstance(packageInfo, path),
-                                                            "md_viewer")
+                                openFragmentSlide(Markdown.newInstance(packageInfo, path), "md_viewer")
                             }
                             path.endsWith(".json") -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            JSON.newInstance(packageInfo, path),
-                                                            "json_viewer")
+                                openFragmentSlide(JSON.newInstance(packageInfo, path), "json_viewer")
                             }
                             /**
                              * TODO - Add a delicious looking code viewers
@@ -104,21 +79,15 @@ class Extras : ScopedFragment() {
                              * JAVA done
                              */
                             else -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            Text.newInstance(packageInfo, path),
-                                                            "text_viewer")
+                                openFragmentSlide(Text.newInstance(packageInfo, path), "text_viewer")
                             }
                         }
                     }
 
                     override fun onExtrasLongClicked(path: String) {
-                        clearEnterTransition()
-                        clearExitTransition()
                         when {
                             path.endsWith(".ttf") -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            Font.newInstance(packageInfo, path),
-                                                            "ttf_viewer")
+                                openFragmentSlide(Font.newInstance(packageInfo, path), "ttf_viewer")
                             }
                             path.endsWith(".html") ||
                                     path.endsWith(".java") ||
@@ -127,14 +96,10 @@ class Extras : ScopedFragment() {
                                     path.endsWith(".proto") ||
                                     path.endsWith(".js") ||
                                     path.endsWith(".md") -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            Text.newInstance(packageInfo, path),
-                                                            "text_viewer")
+                                openFragmentSlide(Text.newInstance(packageInfo, path), "text_viewer")
                             }
                             else -> {
-                                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                            Text.newInstance(packageInfo, path),
-                                                            "text_viewer")
+                                openFragmentSlide(Text.newInstance(packageInfo, path), "text_viewer")
                             }
                         }
                     }
@@ -151,21 +116,11 @@ class Extras : ScopedFragment() {
         }
 
         extrasViewModel.getError().observe(viewLifecycleOwner) {
-            val e = Error.newInstance(it)
-            e.show(childFragmentManager, "error_dialog")
-            e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                override fun onDismiss() {
-                    requireActivity().onBackPressed()
-                }
-            })
+            showError(it)
         }
 
         options.setOnClickListener {
             PopupExtrasMenu(it)
-        }
-
-        filter.setOnClickListener {
-            PopupExtrasFilter(it)
         }
 
         search.setOnClickListener {
@@ -177,24 +132,10 @@ class Extras : ScopedFragment() {
         }
     }
 
-    private fun searchBoxState() {
-        if (ExtrasPreferences.isSearchVisible()) {
-            search.setImageResource(R.drawable.ic_close)
-            title.gone()
-            searchBox.visible(true)
-            searchBox.showInput()
-        } else {
-            search.setImageResource(R.drawable.ic_search)
-            title.visible(true)
-            searchBox.gone()
-            searchBox.hideInput()
-        }
-    }
-
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             ExtrasPreferences.extrasSearch -> {
-                searchBoxState()
+                searchBoxState(true, ExtrasPreferences.isSearchVisible())
             }
         }
     }

@@ -5,7 +5,7 @@ import app.simple.inure.preferences.StatisticsPreferences
 import java.util.*
 
 object SortUsageStats {
-    const val TIME = "time"
+    const val TIME_USED = "time"
     const val DATA_SENT = "data_up"
     const val DATA_RECEIVED = "data_received"
     const val WIFI_SENT = "wifi_sent"
@@ -29,7 +29,7 @@ object SortUsageStats {
             WIFI_RECEIVED -> {
                 sortByWifiReceived()
             }
-            TIME -> {
+            TIME_USED -> {
                 sortByTime()
             }
             else -> {
@@ -65,11 +65,11 @@ object SortUsageStats {
     private fun ArrayList<PackageStats>.sortByDataSent() {
         return if (StatisticsPreferences.isReverseSorting()) {
             this.sortByDescending {
-                it.dataSent
+                it.mobileData?.tx
             }
         } else {
             this.sortBy {
-                it.dataSent
+                it.mobileData?.tx
             }
         }
     }
@@ -77,11 +77,11 @@ object SortUsageStats {
     private fun ArrayList<PackageStats>.sortByDataReceived() {
         return if (StatisticsPreferences.isReverseSorting()) {
             this.sortByDescending {
-                it.dataReceived
+                it.mobileData?.rx
             }
         } else {
             this.sortBy {
-                it.dataReceived
+                it.mobileData?.rx
             }
         }
     }
@@ -89,11 +89,11 @@ object SortUsageStats {
     private fun ArrayList<PackageStats>.sortByWifiSent() {
         return if (StatisticsPreferences.isReverseSorting()) {
             this.sortByDescending {
-                it.dataSentWifi
+                it.wifiData?.tx
             }
         } else {
             this.sortBy {
-                it.dataSentWifi
+                it.wifiData?.tx
             }
         }
     }
@@ -101,11 +101,11 @@ object SortUsageStats {
     private fun ArrayList<PackageStats>.sortByWifiReceived() {
         return if (StatisticsPreferences.isReverseSorting()) {
             this.sortByDescending {
-                it.dataReceivedWifi
+                it.wifiData?.rx
             }
         } else {
             this.sortBy {
-                it.dataReceivedWifi
+                it.wifiData?.rx
             }
         }
     }

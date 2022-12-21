@@ -8,6 +8,7 @@ import android.provider.DocumentsContract
 import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
+import app.simple.inure.constants.Extensions
 import java.io.*
 import java.util.*
 import java.util.zip.ZipEntry
@@ -44,6 +45,24 @@ object FileUtils {
         }
     }
 
+    fun ArrayList<File>.getLength(): Long {
+        var total = 0L
+        for (file in this) {
+            total += file.length()
+        }
+        return total
+    }
+
+    fun ArrayList<File>.findFile(fileName: String): File? {
+        for (file in this) {
+            if (file.isFile && file.path.endsWith(fileName)) {
+                return file
+            }
+        }
+
+        return null
+    }
+
     /**
      * Converts the given input stream to the given output file
      */
@@ -61,9 +80,7 @@ object FileUtils {
         }
     }
 
-    @Throws(IOException::class,
-            NullPointerException::class,
-            ArrayIndexOutOfBoundsException::class)
+    @Throws(IOException::class, NullPointerException::class, ArrayIndexOutOfBoundsException::class)
     fun createZip(_files: Array<String>, zipFileName: File?) {
         var origin: BufferedInputStream? = null
         var out: ZipOutputStream? = null
@@ -90,13 +107,16 @@ object FileUtils {
         }
     }
 
+    fun String.toFile(): File {
+        return File(this)
+    }
+
     fun Uri.getMimeType(context: Context): String? {
         return if (ContentResolver.SCHEME_CONTENT == scheme) {
             context.contentResolver.getType(this)
         } else {
             val fileExtension = MimeTypeMap.getFileExtensionFromUrl(this.toString())
-            MimeTypeMap.getSingleton().getMimeTypeFromExtension(
-                    fileExtension.lowercase(Locale.ROOT))
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.lowercase(Locale.ROOT))
         }
     }
 
@@ -109,5 +129,9 @@ object FileUtils {
             ex.printStackTrace()
             null
         }
+    }
+
+    fun String.isImageFile(): Boolean {
+        return Extensions.imageExtensions.contains(this.substring(this.lastIndexOf(".") + 1))
     }
 }

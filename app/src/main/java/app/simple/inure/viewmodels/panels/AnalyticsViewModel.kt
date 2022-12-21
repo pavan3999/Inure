@@ -2,14 +2,14 @@ package app.simple.inure.viewmodels.panels
 
 import android.app.Application
 import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import app.simple.inure.R
-import app.simple.inure.extension.viewmodels.WrappedViewModel
+import app.simple.inure.apk.utils.PackageUtils.getInstalledPackages
+import app.simple.inure.extensions.viewmodels.WrappedViewModel
 import app.simple.inure.preferences.AnalyticsPreferences
 import app.simple.inure.util.SDKHelper
 import com.github.mikephil.charting.data.PieEntry
@@ -53,7 +53,7 @@ class AnalyticsViewModel(application: Application) : WrappedViewModel(applicatio
     @RequiresApi(Build.VERSION_CODES.N)
     private fun loadMinimumOsData() {
         viewModelScope.launch(Dispatchers.IO) {
-            val apps = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+            val apps = packageManager.getInstalledPackages()
             val data = arrayListOf<PieEntry>()
             val colors = arrayListOf<Int>()
 
@@ -79,7 +79,7 @@ class AnalyticsViewModel(application: Application) : WrappedViewModel(applicatio
 
     private fun loadTargetOsData() {
         viewModelScope.launch(Dispatchers.IO) {
-            val apps = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+            val apps = packageManager.getInstalledPackages()
             val data = arrayListOf<PieEntry>()
             val colors = arrayListOf<Int>()
 
@@ -105,7 +105,7 @@ class AnalyticsViewModel(application: Application) : WrappedViewModel(applicatio
 
     private fun loadInstallLocationData() {
         viewModelScope.launch(Dispatchers.IO) {
-            val apps = packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
+            val apps = packageManager.getInstalledPackages()
             val data = arrayListOf<PieEntry>()
             val colors = arrayListOf<Int>()
 
@@ -137,5 +137,10 @@ class AnalyticsViewModel(application: Application) : WrappedViewModel(applicatio
             loadMinimumOsData()
         }
         loadTargetOsData()
+    }
+
+    override fun onAppUninstalled(packageName: String?) {
+        super.onAppUninstalled(packageName)
+        refresh()
     }
 }

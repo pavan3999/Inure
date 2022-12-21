@@ -11,7 +11,7 @@ import app.simple.inure.R
 import app.simple.inure.decorations.corners.DynamicCornerLinearLayout
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
 import app.simple.inure.decorations.theme.ThemeSeekBar
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.preferences.AppearancePreferences
 import app.simple.inure.util.SpannableStringBuilder.buildSpannableString
 import com.google.android.material.shape.CornerFamily
@@ -48,7 +48,7 @@ class RoundedCorner : ScopedBottomSheetFragment() {
         lastCornerValue = AppearancePreferences.getCornerRadius() * 5
         radiusValue.text = buildSpannableString("${AppearancePreferences.getCornerRadius()} px", 2)
         radiusSeekBar.max = 990
-        radiusSeekBar.updateSeekbar((AppearancePreferences.getCornerRadius() * factor).toInt())
+        radiusSeekBar.updateProgress((AppearancePreferences.getCornerRadius() * factor).toInt())
 
         radiusSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {

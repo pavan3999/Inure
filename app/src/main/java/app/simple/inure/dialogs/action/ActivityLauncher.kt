@@ -10,7 +10,7 @@ import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.LoaderImageView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.factories.actions.ActivityLaunchFactory
 import app.simple.inure.viewmodels.dialogs.ActivityLauncherViewModel
 
@@ -30,10 +30,9 @@ class ActivityLauncher : ScopedBottomSheetFragment() {
         loader = view.findViewById(R.id.loader)
         status = view.findViewById(R.id.activity_launcher_result)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
         packageId = requireArguments().getString(BundleConstants.packageId)!!
 
-        activityLaunchFactory = ActivityLaunchFactory(requireActivity().application, packageInfo, packageId!!)
+        activityLaunchFactory = ActivityLaunchFactory(packageInfo, packageId!!)
         activityLauncherViewModel = ViewModelProvider(this, activityLaunchFactory)[ActivityLauncherViewModel::class.java]
 
         return view
@@ -42,7 +41,7 @@ class ActivityLauncher : ScopedBottomSheetFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        activityLauncherViewModel.getSuccessStatus().observe(viewLifecycleOwner, {
+        activityLauncherViewModel.getSuccessStatus().observe(viewLifecycleOwner) {
             when (it) {
                 "Done" -> {
                     loader.loaded()
@@ -53,7 +52,7 @@ class ActivityLauncher : ScopedBottomSheetFragment() {
                     status.setText(R.string.failed)
                 }
             }
-        })
+        }
     }
 
     companion object {

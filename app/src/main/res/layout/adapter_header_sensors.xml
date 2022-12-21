@@ -16,14 +16,15 @@
         android:clipToPadding="false"
         android:orientation="horizontal">
 
-        <ImageView
+        <app.simple.inure.decorations.theme.ThemeIcon
             android:id="@+id/imageView4"
             android:layout_width="@dimen/adapter_header_icon_size"
             android:layout_height="@dimen/adapter_header_icon_size"
             android:layout_gravity="center_vertical"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_sensors"
-            android:transitionName="@string/sensors" />
+            android:transitionName="@string/sensors"
+            app:srcCompat="@drawable/ic_sensors"
+            app:tintType="accent" />
 
         <app.simple.inure.decorations.typeface.TypeFaceTextView
             android:id="@+id/typeFaceTextView02"
@@ -52,19 +53,26 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
+            android:drawablePadding="@dimen/popup_padding"
             android:text="@string/sensors"
             android:textSize="16sp"
             app:appFontStyle="bold"
+            app:drawableStartCompat="@drawable/ic_numbers_textview"
+            app:drawableTintStyle="accent"
             app:textColorStyle="primary" />
 
-        <app.simple.inure.decorations.ripple.DynamicRippleImageButton
-            android:id="@+id/adapter_header_sort_button"
-            android:layout_width="@dimen/button_size"
-            android:layout_height="@dimen/button_size"
+        <app.simple.inure.decorations.typeface.TypeFaceTextView
+            android:id="@+id/adapter_header_sorting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:contentDescription="@string/configuration_button"
-            android:src="@drawable/ic_sort"
-            app:buttonTintType="regular" />
+            android:layout_marginStart="8dp"
+            android:drawablePadding="@dimen/popup_padding"
+            android:textSize="@dimen/info_text_small"
+            app:appFontStyle="regular"
+            app:drawableStartCompat="@drawable/ic_sort_tiny"
+            app:drawableTintStyle="secondary"
+            app:textColorStyle="tertiary" />
 
     </LinearLayout>
 

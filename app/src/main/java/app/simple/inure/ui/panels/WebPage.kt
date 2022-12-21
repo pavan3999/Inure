@@ -8,7 +8,7 @@ import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.fastscroll.FastScrollerBuilder
 import app.simple.inure.decorations.views.CustomWebView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.util.ConditionUtils.isNull
 
 class WebPage : ScopedFragment() {
@@ -30,7 +30,7 @@ class WebPage : ScopedFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         if (this.arguments != null && savedInstanceState.isNull()) {
-            when (this.requireArguments().get(BundleConstants.webPage)) {
+            when (this.requireArguments().getString(BundleConstants.webPage)) {
                 getString(R.string.permissions) -> {
                     webView.loadUrl("file:///android_asset/html/required_permissions.html")
                 }
@@ -45,6 +45,12 @@ class WebPage : ScopedFragment() {
                 }
                 getString(R.string.user_agreements) -> {
                     webView.loadUrl("file:///android_asset/html/gpl.html")
+                }
+                getString(R.string.privacy_policy) -> {
+                    webView.loadUrl("file:///android_asset/html/privacy.html")
+                }
+                getString(R.string.translate) -> {
+                    webView.loadUrl("file:///android_asset/html/translation.html")
                 }
             }
         } else {

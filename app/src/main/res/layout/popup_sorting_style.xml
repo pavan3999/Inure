@@ -78,12 +78,12 @@
             android:layout_weight="1"
             android:paddingHorizontal="30dp"
             android:paddingVertical="20dp"
-            android:text="@string/descending"
+            android:text="@string/reversed"
             android:textSize="@dimen/popup_text_size"
             app:appFontStyle="bold"
             app:textColorStyle="primary" />
 
-        <app.simple.inure.decorations.checkbox.CheckBox
+        <app.simple.inure.decorations.checkbox.InureCheckBox
             android:id="@+id/sort_reversed_checkbox"
             android:layout_width="@dimen/checkbox_dimensions"
             android:layout_height="@dimen/checkbox_dimensions"

@@ -10,7 +10,7 @@ import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.LoaderImageView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.factories.actions.ForceCloseViewModelFactory
 import app.simple.inure.viewmodels.dialogs.ForceCloseViewModel
 
@@ -25,20 +25,18 @@ class ForceStop : ScopedBottomSheetFragment() {
         loader = view.findViewById(R.id.loader)
         status = view.findViewById(R.id.force_stop_result)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        with(ViewModelProvider(this, ForceCloseViewModelFactory(requireApplication(), packageInfo))[ForceCloseViewModel::class.java]) {
-            getResults().observe(viewLifecycleOwner, {
+        with(ViewModelProvider(this, ForceCloseViewModelFactory(packageInfo))[ForceCloseViewModel::class.java]) {
+            getResults().observe(viewLifecycleOwner) {
 
-            })
+            }
 
-            getSuccessStatus().observe(viewLifecycleOwner, {
+            getSuccessStatus().observe(viewLifecycleOwner) {
                 when (it) {
                     "Done" -> {
                         loader.loaded()
@@ -49,7 +47,7 @@ class ForceStop : ScopedBottomSheetFragment() {
                         status.setText(R.string.failed)
                     }
                 }
-            })
+            }
         }
     }
 

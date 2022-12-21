@@ -13,10 +13,8 @@ import app.simple.inure.adapters.home.AdapterUninstalled
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.dialogs.menus.AppsMenu
 import app.simple.inure.dialogs.miscellaneous.UninstallInfo
-import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
-import app.simple.inure.ui.app.AppInfo
-import app.simple.inure.util.FragmentHelper
+import app.simple.inure.extensions.fragments.ScopedFragment
+import app.simple.inure.interfaces.adapters.AdapterCallbacks
 import app.simple.inure.viewmodels.panels.HomeViewModel
 
 class Uninstalled : ScopedFragment() {
@@ -49,7 +47,7 @@ class Uninstalled : ScopedFragment() {
                 startPostponedEnterTransition()
             }
 
-            adapterUninstalled?.setOnItemClickListener(object : AppsAdapterCallbacks {
+            adapterUninstalled?.setOnItemClickListener(object : AdapterCallbacks {
                 override fun onAppClicked(packageInfo: PackageInfo, icon: ImageView) {
                     openAppInfo(packageInfo, icon)
                 }
@@ -58,31 +56,23 @@ class Uninstalled : ScopedFragment() {
                     AppsMenu.newInstance(packageInfo)
                         .show(childFragmentManager, "apps_menu")
                 }
-
-                override fun onSearchPressed(view: View) {
-                    clearTransitions()
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                Search.newInstance(true),
-                                                "search")
-                }
-
-                override fun onSettingsPressed(view: View) {
-                    clearExitTransition()
-                    FragmentHelper.openFragment(parentFragmentManager, Preferences.newInstance(), "prefs_screen")
-                }
-
-                override fun onInfoPressed(view: View) {
-                    UninstallInfo.newInstance()
-                        .show(childFragmentManager, "uninstall_info")
-                }
             })
-        }
-    }
 
-    private fun openAppInfo(packageInfo: PackageInfo, icon: ImageView) {
-        FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                    AppInfo.newInstance(packageInfo, icon.transitionName),
-                                    icon, "app_info")
+            bottomRightCornerMenu?.initBottomMenuWithRecyclerView(arrayListOf(R.drawable.ic_info, R.drawable.ic_settings, -1, R.drawable.ic_search), recyclerView) { id, _ ->
+                when (id) {
+                    R.drawable.ic_settings -> {
+                        openFragmentSlide(Preferences.newInstance(), "prefs_screen")
+                    }
+                    R.drawable.ic_search -> {
+                        openFragmentSlide(Search.newInstance(true), "search")
+                    }
+                    R.drawable.ic_info -> {
+                        UninstallInfo.newInstance()
+                            .show(childFragmentManager, "uninstall_info")
+                    }
+                }
+            }
+        }
     }
 
     companion object {

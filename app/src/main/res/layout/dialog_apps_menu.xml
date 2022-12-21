@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<app.simple.inure.decorations.corners.DynamicCornerCoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:maxHeight="@dimen/dialog_height">
 
-    <app.simple.inure.decorations.corners.DynamicCornersNestedScrollView xmlns:app="http://schemas.android.com/apk/res-auto"
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/apps_menu_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fadingEdge="vertical"
         android:fadingEdgeLength="20dp"
+        android:overScrollMode="never"
         android:padding="@dimen/dialog_padding"
         android:requiresFadingEdge="vertical"
         app:layout_behavior="@string/over_scroll_behavior">
@@ -174,8 +176,8 @@
                 <app.simple.inure.decorations.ripple.DynamicRippleTextView
                     android:id="@+id/trackers"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:padding="@dimen/menu_text_button_padding"
                     android:text="@string/trackers"
@@ -226,11 +228,11 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:padding="@dimen/menu_text_button_padding"
-                android:text="@string/add_to_quick_apps"
+                android:text="@string/pin_to_home_panel"
                 android:textSize="@dimen/popup_text_size"
                 app:appFontStyle="bold"
                 app:textColorStyle="secondary" />
 
         </LinearLayout>
-    </app.simple.inure.decorations.corners.DynamicCornersNestedScrollView>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </androidx.core.widget.NestedScrollView>
+</app.simple.inure.decorations.corners.DynamicCornerCoordinatorLayout>

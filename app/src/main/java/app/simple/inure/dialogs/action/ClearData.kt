@@ -10,7 +10,7 @@ import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.LoaderImageView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.factories.actions.ClearDataViewModelFactory
 import app.simple.inure.viewmodels.dialogs.ClearDataViewModel
 
@@ -25,20 +25,18 @@ class ClearData : ScopedBottomSheetFragment() {
         loader = view.findViewById(R.id.loader)
         status = view.findViewById(R.id.clear_data_result)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        with(ViewModelProvider(this, ClearDataViewModelFactory(requireApplication(), packageInfo))[ClearDataViewModel::class.java]) {
-            getResults().observe(viewLifecycleOwner, {
+        with(ViewModelProvider(this, ClearDataViewModelFactory(packageInfo))[ClearDataViewModel::class.java]) {
+            getResults().observe(viewLifecycleOwner) {
 
-            })
+            }
 
-            getSuccessStatus().observe(viewLifecycleOwner, {
+            getSuccessStatus().observe(viewLifecycleOwner) {
                 when (it) {
                     "Done" -> {
                         loader.loaded()
@@ -49,7 +47,12 @@ class ClearData : ScopedBottomSheetFragment() {
                         status.setText(R.string.failed)
                     }
                 }
-            })
+            }
+
+            getError().observe(viewLifecycleOwner) {
+                showError(it)
+                dismiss()
+            }
         }
     }
 

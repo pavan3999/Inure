@@ -2,21 +2,18 @@ package app.simple.inure.viewmodels.viewers
 
 import android.app.Application
 import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import app.simple.inure.R
 import app.simple.inure.apk.utils.MetaUtils
-import app.simple.inure.constants.Misc
+import app.simple.inure.apk.utils.PackageUtils.getPackageInfo
+import app.simple.inure.extensions.viewmodels.WrappedViewModel
 import app.simple.inure.models.ActivityInfoModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class ReceiversViewModel(application: Application, val packageInfo: PackageInfo) : AndroidViewModel(application) {
+class ReceiversViewModel(application: Application, val packageInfo: PackageInfo) : WrappedViewModel(application) {
 
     private val receivers: MutableLiveData<MutableList<ActivityInfoModel>> by lazy {
         MutableLiveData<MutableList<ActivityInfoModel>>().also {
@@ -24,16 +21,8 @@ class ReceiversViewModel(application: Application, val packageInfo: PackageInfo)
         }
     }
 
-    private val error: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
-
     fun getReceivers(): LiveData<MutableList<ActivityInfoModel>> {
         return receivers
-    }
-
-    fun getError(): LiveData<String> {
-        return error
     }
 
     fun getReceiversData(keyword: String) {
@@ -41,14 +30,7 @@ class ReceiversViewModel(application: Application, val packageInfo: PackageInfo)
             kotlin.runCatching {
                 val list = arrayListOf<ActivityInfoModel>()
 
-                val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    PackageManager.GET_RECEIVERS or PackageManager.MATCH_DISABLED_COMPONENTS
-                } else {
-                    @Suppress("deprecation")
-                    PackageManager.GET_RECEIVERS or PackageManager.GET_DISABLED_COMPONENTS
-                }
-
-                for (ai in getApplication<Application>().packageManager.getPackageInfo(packageInfo.packageName, flags).receivers) {
+                for (ai in getApplication<Application>().packageManager.getPackageInfo(packageInfo.packageName)!!.receivers) {
                     val activityInfoModel = ActivityInfoModel()
 
                     activityInfoModel.activityInfo = ai
@@ -76,8 +58,11 @@ class ReceiversViewModel(application: Application, val packageInfo: PackageInfo)
 
                 receivers.postValue(list)
             }.getOrElse {
-                delay(Misc.delay)
-                error.postValue(it.stackTraceToString())
+                if (it is NullPointerException) {
+                    notFound.postValue(9)
+                } else {
+                    postError(it)
+                }
             }
         }
     }

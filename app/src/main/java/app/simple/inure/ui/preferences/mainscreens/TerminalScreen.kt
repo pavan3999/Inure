@@ -11,16 +11,15 @@ import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import app.simple.inure.R
 import app.simple.inure.activities.alias.TerminalAlias
-import app.simple.inure.apk.utils.PackageUtils
+import app.simple.inure.apk.utils.PackageUtils.isPackageInstalledAndEnabled
 import app.simple.inure.decorations.ripple.DynamicRippleRelativeLayout
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
 import app.simple.inure.decorations.switchview.SwitchView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.glide.util.ImageLoader.loadAppIcon
 import app.simple.inure.popups.terminal.PopupInputMethod
 import app.simple.inure.preferences.TerminalPreferences
 import app.simple.inure.ui.preferences.subscreens.*
-import app.simple.inure.util.FragmentHelper
 import app.simple.inure.util.ViewUtils.gone
 
 class TerminalScreen : ScopedFragment() {
@@ -76,8 +75,8 @@ class TerminalScreen : ScopedFragment() {
 
         setInputMethodText()
 
-        if (PackageUtils.isPackageInstalled("com.termux", requirePackageManager())) {
-            termuxAppIcon.loadAppIcon("com.termux")
+        if (requirePackageManager().isPackageInstalledAndEnabled("com.termux")) {
+            termuxAppIcon.loadAppIcon("com.termux", enabled = true)
         } else {
             termuxContainer.gone()
         }
@@ -99,13 +98,11 @@ class TerminalScreen : ScopedFragment() {
         }
 
         fontSize.setOnClickListener {
-            clearExitTransition()
-            FragmentHelper.openFragment(parentFragmentManager, TerminalFontSize.newInstance(), "font_size")
+            openFragmentSlide(TerminalFontSize.newInstance(), "font_size")
         }
 
         color.setOnClickListener {
-            clearExitTransition()
-            FragmentHelper.openFragment(parentFragmentManager, TerminalColor.newInstance(), "color")
+            openFragmentSlide(TerminalColor.newInstance(), "color")
         }
 
         cursorBlink.setOnSwitchCheckedChangeListener {
@@ -117,18 +114,15 @@ class TerminalScreen : ScopedFragment() {
         }
 
         backButtonAction.setOnClickListener {
-            clearExitTransition()
-            FragmentHelper.openFragment(parentFragmentManager, TerminalBackButtonAction.newInstance(), "back_button")
+            openFragmentSlide(TerminalBackButtonAction.newInstance(), "back_button")
         }
 
         controlKey.setOnClickListener {
-            clearExitTransition()
-            FragmentHelper.openFragment(parentFragmentManager, TerminalControlKey.newInstance(), "control_key")
+            openFragmentSlide(TerminalControlKey.newInstance(), "control_key")
         }
 
         fnKey.setOnClickListener {
-            clearExitTransition()
-            FragmentHelper.openFragment(parentFragmentManager, TerminalFnKey.newInstance(), "fn_key")
+            openFragmentSlide(TerminalFnKey.newInstance(), "fn_key")
         }
 
         inputMethod.setOnClickListener {

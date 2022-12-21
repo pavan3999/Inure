@@ -10,14 +10,15 @@ import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.adapters.ui.AdapterNotes
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.dialogs.app.Sure
-import app.simple.inure.dialogs.menus.NotesMenu
-import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
+import app.simple.inure.dialogs.app.Sure.Companion.newSureInstance
+import app.simple.inure.dialogs.notes.NotesMenu
+import app.simple.inure.extensions.fragments.ScopedFragment
+import app.simple.inure.interfaces.adapters.AdapterCallbacks
+import app.simple.inure.interfaces.fragments.SureCallbacks
 import app.simple.inure.models.NotesPackageInfo
+import app.simple.inure.popups.notes.PopupNotesMenu
 import app.simple.inure.preferences.NotesPreferences
 import app.simple.inure.ui.viewers.Note
-import app.simple.inure.util.FragmentHelper
 import app.simple.inure.viewmodels.panels.NotesViewModel
 
 class Notes : ScopedFragment() {
@@ -32,7 +33,7 @@ class Notes : ScopedFragment() {
 
         recyclerView = view.findViewById(R.id.notes_recycler_view)
 
-        notesViewModel = ViewModelProvider(this)[NotesViewModel::class.java]
+        notesViewModel = ViewModelProvider(requireActivity())[NotesViewModel::class.java]
 
         return view
     }
@@ -40,50 +41,55 @@ class Notes : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        notesViewModel.getNotesData().observe(viewLifecycleOwner) {
+        fullVersionCheck()
+
+        notesViewModel.getNotesData().observe(viewLifecycleOwner) { it ->
             adapterNotes = AdapterNotes(it)
 
-            adapterNotes?.setOnItemClickListener(object : AppsAdapterCallbacks {
+            adapterNotes?.setOnItemClickListener(object : AdapterCallbacks {
                 override fun onNoteClicked(notesPackageInfo: NotesPackageInfo) {
-                    clearExitTransition()
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                NotesEditor.newInstance(notesPackageInfo.packageInfo),
-                                                "notes_editor")
+                    openFragmentSlide(NotesEditor.newInstance(notesPackageInfo.packageInfo), "notes_editor")
                 }
 
-                override fun onNoteLongClicked(notesPackageInfo: NotesPackageInfo) {
-                    clearExitTransition()
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                Note.newInstance(notesPackageInfo.packageInfo),
-                                                "notes_viewer")
-                }
+                override fun onNoteLongClicked(notesPackageInfo: NotesPackageInfo, position: Int, view: View) {
+                    PopupNotesMenu(view).setOnPopupNotesMenuCallbackListener(object : PopupNotesMenu.Companion.PopupNotesMenuCallback {
+                        override fun onDeleteClicked() {
+                            childFragmentManager.newSureInstance().setOnSureCallbackListener(object : SureCallbacks {
+                                override fun onSure() {
+                                    println(position)
+                                    notesViewModel.deleteNoteData(notesPackageInfo, position)
+                                }
+                            })
+                        }
 
-                override fun onSearchPressed(view: View) {
-                    clearTransitions()
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                Search.newInstance(true),
-                                                "search")
-                }
+                        override fun onOpenClicked() {
+                            openFragmentSlide(Note.newInstance(notesPackageInfo.packageInfo), "notes_editor")
+                        }
 
-                override fun onSettingsPressed(view: View) {
-                    NotesMenu.newInstance()
-                        .show(childFragmentManager, "notes_menu")
-                }
-
-                override fun onNoteDelete(view: View, notesPackageInfo: NotesPackageInfo?) {
-                    val p = Sure.newInstance()
-
-                    p.setOnSureCallbackListener(object : Sure.Companion.SureCallbacks {
-                        override fun onSure() {
-                            notesViewModel.deleteNoteData(notesPackageInfo)
+                        override fun onEditClicked() {
+                            openFragmentSlide(NotesEditor.newInstance(notesPackageInfo.packageInfo), "notes_editor")
                         }
                     })
-
-                    p.show(childFragmentManager, "sure")
                 }
             })
 
+            notesViewModel.getDelete().observe(viewLifecycleOwner) {
+                adapterNotes?.removeItem(it)
+            }
+
             recyclerView.adapter = adapterNotes
+
+            bottomRightCornerMenu?.initBottomMenuWithRecyclerView(arrayListOf(R.drawable.ic_settings, -1, R.drawable.ic_search), recyclerView) { id, _ ->
+                when (id) {
+                    R.drawable.ic_settings -> {
+                        NotesMenu.newInstance()
+                            .show(childFragmentManager, "notes_menu")
+                    }
+                    R.drawable.ic_search -> {
+                        openFragmentSlide(Search.newInstance(true), "search")
+                    }
+                }
+            }
 
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()

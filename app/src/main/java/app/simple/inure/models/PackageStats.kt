@@ -9,37 +9,32 @@ class PackageStats {
     var packageInfo: PackageInfo? = null
 
     /**
-     * Number of times app is opened
-     */
-    var numberOfTimeOpened = 0
-
-    /**
      * Total time the app is being used
      */
     var totalTimeUsed = 0L
 
     /**
-     * Total data uploaded
+     * Total time of the last usage
      */
-    var dataSent = 0L
+    var lastUsageTime = 0L
 
     /**
-     * Total data received
+     * Total mobile data
      */
-    var dataReceived = 0L
+    var mobileData: DataUsage? = null
 
     /**
-     * Total data sent via wifi
+     * Total wifi data
      */
-    var dataSentWifi = 0L
-
-    /**
-     * Total data received via wifi
-     */
-    var dataReceivedWifi = 0L
+    var wifiData: DataUsage? = null
 
     /**
      * Total launch count
      */
     var launchCount = 0
+
+    /**
+     * App usage data
+     */
+    var appUsage: ArrayList<AppUsageModel>? = null
 }

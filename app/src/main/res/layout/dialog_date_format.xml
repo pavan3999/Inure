@@ -17,7 +17,7 @@
         app:appFontStyle="bold"
         app:textColorStyle="primary" />
 
-    <app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+    <app.simple.inure.decorations.corners.DynamicCornerEditText
         android:id="@+id/date_format_edit_text"
         android:layout_width="match_parent"
         android:layout_height="50dp"
@@ -75,6 +75,9 @@
             android:layout_gravity="end|center_vertical"
             android:gravity="center"
             android:padding="@dimen/dialog_padding"
+            android:drawablePadding="5dp"
+            app:drawableTintStyle="secondary"
+            app:drawableEndCompat="@drawable/ic_web_page_tiny"
             android:text="@string/cheatsheet"
             android:textSize="@dimen/info_text_small"
             app:appFontStyle="bold"

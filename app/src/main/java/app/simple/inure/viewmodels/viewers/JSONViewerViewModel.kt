@@ -7,16 +7,15 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import app.simple.inure.exceptions.LargeStringException
+import app.simple.inure.extensions.viewmodels.WrappedViewModel
 import app.simple.inure.preferences.FormattingPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.apache.commons.io.IOUtils
 import java.io.BufferedInputStream
 import java.io.FileNotFoundException
 import java.util.*
@@ -26,17 +25,13 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 class JSONViewerViewModel(application: Application, private val accentColor: Int, private val packageInfo: PackageInfo, private val path: String)
-    : AndroidViewModel(application) {
+    : WrappedViewModel(application) {
 
     private val quotations: Pattern = Pattern.compile(":\\s\"[\\S\\w^]*\"",
                                                       Pattern.MULTILINE or Pattern.CASE_INSENSITIVE)
 
     private val tags = Pattern.compile("\"[a-zA-Z_0-9]+\"+:",  // "a-z0-9":
                                        Pattern.MULTILINE or Pattern.CASE_INSENSITIVE)
-
-    private val error: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
 
     private val spanned: MutableLiveData<Spanned> by lazy {
         MutableLiveData<Spanned>().also {
@@ -48,10 +43,6 @@ class JSONViewerViewModel(application: Application, private val accentColor: Int
         return spanned
     }
 
-    fun getError(): LiveData<String> {
-        return error
-    }
-
     private fun getSpannedXml() {
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -60,7 +51,7 @@ class JSONViewerViewModel(application: Application, private val accentColor: Int
             kotlin.runCatching {
                 val formattedContent: SpannableString
 
-                val code: String = getJsonFile()!!
+                val code: String = getJsonFile()
 
                 if (code.length >= 150000 && !FormattingPreferences.isLoadingLargeStrings()) {
                     throw LargeStringException("String size ${code.length} is too big to render without freezing the app")
@@ -82,22 +73,24 @@ class JSONViewerViewModel(application: Application, private val accentColor: Int
 
                 spanned.postValue(formattedContent)
             }.getOrElse {
-                error.postValue(it.stackTraceToString())
+                postError(it)
             }
         }
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
-    private fun getJsonFile(): String? {
+    private fun getJsonFile(): String {
         ZipFile(packageInfo.applicationInfo.sourceDir).use { zipFile ->
             val entries: Enumeration<out ZipEntry?> = zipFile.entries()
 
             while (entries.hasMoreElements()) {
                 entries.nextElement()!!.let { entry ->
                     if (entry.name == path) {
-                        return IOUtils.toString(
-                            BufferedInputStream(zipFile.getInputStream(entry)),
-                            "UTF-8")
+                        return BufferedInputStream(zipFile.getInputStream(entry)).use { bufferedInputStream ->
+                            bufferedInputStream.bufferedReader().use {
+                                it.readText()
+                            }
+                        }
                     }
                 }
             }

@@ -1,6 +1,20 @@
 package app.simple.inure.constants
 
 object BundleConstants {
+    const val batchUninstallerProgressStateModel = "batchUninstallerProgressStateModel"
+    const val text = "text_only"
+    const val firstLaunch = "first_launch"
+    const val error = "error"
+    const val pathToImage = "path_of_image"
+    const val pathToApk = "path_of_apk"
+    const val goBack = "go_back"
+    const val path: String = "path"
+    const val isRaw: String = "is_raw"
+    const val certificate: String = "certificate"
+    const val uri: String = "uri"
+    const val file: String = "file"
+    const val warning: String = "warning"
+    const val loading: String = "loading"
     const val trackersMessage: String = "trackers_message"
     const val className = "class_name"
     const val packageInfo = "package_info"

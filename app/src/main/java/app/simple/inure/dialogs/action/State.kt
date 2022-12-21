@@ -8,10 +8,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
+import app.simple.inure.apk.utils.PackageUtils.getApplicationInfo
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.LoaderImageView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.factories.actions.StateViewModelFactory
 import app.simple.inure.viewmodels.dialogs.StateViewModel
 
@@ -28,24 +29,22 @@ class State : ScopedBottomSheetFragment() {
         loader = view.findViewById(R.id.loader)
         status = view.findViewById(R.id.state_result)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        with(ViewModelProvider(this, StateViewModelFactory(requireApplication(), packageInfo))[StateViewModel::class.java]) {
-            getResults().observe(viewLifecycleOwner, {
+        with(ViewModelProvider(this, StateViewModelFactory(packageInfo))[StateViewModel::class.java]) {
+            getResults().observe(viewLifecycleOwner) {
 
-            })
+            }
 
-            getSuccessStatus().observe(viewLifecycleOwner, {
+            getSuccessStatus().observe(viewLifecycleOwner) {
                 when (it) {
                     "Done" -> {
                         loader.loaded()
-                        if (getApplication<Application>().packageManager.getApplicationInfo(packageInfo.packageName, 0).enabled) {
+                        if (getApplication<Application>().packageManager.getApplicationInfo(packageInfo.packageName)!!.enabled) {
                             status.setText(R.string.enabled)
                         } else {
                             status.setText(R.string.disabled)
@@ -57,7 +56,11 @@ class State : ScopedBottomSheetFragment() {
                         status.setText(R.string.failed)
                     }
                 }
-            })
+            }
+
+            warning.observe(viewLifecycleOwner) {
+                showWarning(it)
+            }
         }
     }
 

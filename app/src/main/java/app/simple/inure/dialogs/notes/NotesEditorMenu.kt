@@ -7,11 +7,8 @@ import android.view.ViewGroup
 import app.simple.inure.R
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
 import app.simple.inure.decorations.switchview.SwitchView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.preferences.NotesPreferences
-import app.simple.inure.ui.panels.Preferences
-import app.simple.inure.util.FragmentHelper
 
 class NotesEditorMenu : ScopedBottomSheetFragment() {
 
@@ -20,7 +17,7 @@ class NotesEditorMenu : ScopedBottomSheetFragment() {
     private lateinit var openSettings: DynamicRippleTextView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.dialog_notes_editor_settings, container, false)
+        val view = inflater.inflate(R.layout.dialog_menu_notes_editor, container, false)
 
         jsonSpansSwitch = view.findViewById(R.id.html_spans)
         autoSave = view.findViewById(R.id.auto_save)
@@ -44,10 +41,7 @@ class NotesEditorMenu : ScopedBottomSheetFragment() {
         }
 
         openSettings.setOnClickListener {
-            (parentFragment as ScopedFragment).clearExitTransition()
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Preferences.newInstance(),
-                                        "prefs_screen")
+            openSettings()
         }
     }
 

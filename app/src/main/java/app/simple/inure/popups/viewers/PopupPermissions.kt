@@ -5,9 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import app.simple.inure.R
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
-import app.simple.inure.extension.popup.BasePopupWindow
-import app.simple.inure.extension.popup.PopupLinearLayout
-import app.simple.inure.extension.popup.PopupMenuCallback
+import app.simple.inure.extensions.popup.BasePopupWindow
+import app.simple.inure.extensions.popup.PopupLinearLayout
+import app.simple.inure.extensions.popup.PopupMenuCallback
 import app.simple.inure.models.PermissionInfo
 
 class PopupPermissions(view: View, permissionInfo: PermissionInfo) : BasePopupWindow() {
@@ -19,7 +19,7 @@ class PopupPermissions(view: View, permissionInfo: PermissionInfo) : BasePopupWi
         val context = contentView.context
         val revoke = contentView.findViewById<DynamicRippleTextView>(R.id.popup_revoke)
 
-        revoke.text = if (permissionInfo.isGranted) {
+        revoke.text = if (permissionInfo.isGranted == 1) {
             context.getString(R.string.revoke)
         } else {
             context.getString(R.string.grant)

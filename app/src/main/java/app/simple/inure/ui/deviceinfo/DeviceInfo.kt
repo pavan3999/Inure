@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.ConcatAdapter
 import app.simple.inure.R
 import app.simple.inure.adapters.deviceinfo.AdapterDeviceInfoContent
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.deviceinfo.DeviceInfoFactory
 import app.simple.inure.viewmodels.deviceinfo.DeviceInfoViewModel
 
@@ -26,7 +26,7 @@ class DeviceInfo : ScopedFragment() {
 
         recyclerView = view.findViewById(R.id.device_info_rv)
 
-        val deviceInfoFactory = DeviceInfoFactory(requireApplication(), requireActivity().window)
+        val deviceInfoFactory = DeviceInfoFactory()
         data = ViewModelProvider(this, deviceInfoFactory)[DeviceInfoViewModel::class.java]
 
         return view

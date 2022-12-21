@@ -42,12 +42,13 @@
 
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
+        <app.simple.inure.decorations.views.GridRecyclerView
             android:id="@+id/app_info_menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layoutAnimation="@anim/grid_list_animation_controller"
+            android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
             android:scrollbars="none" />
 
@@ -73,12 +74,13 @@
 
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
+        <app.simple.inure.decorations.views.GridRecyclerView
             android:id="@+id/app_info_options"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layoutAnimation="@anim/grid_list_animation_controller"
+            android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
             android:scrollbars="none" />
 
@@ -104,12 +106,13 @@
 
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
+        <app.simple.inure.decorations.views.GridRecyclerView
             android:id="@+id/app_info_miscellaneous"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layoutAnimation="@anim/grid_list_animation_controller"
+            android:nestedScrollingEnabled="false"
             android:overScrollMode="never"
             android:scrollbars="none" />
 

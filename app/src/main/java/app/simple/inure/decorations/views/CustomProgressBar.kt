@@ -7,23 +7,32 @@ import android.util.AttributeSet
 import android.widget.ProgressBar
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import app.simple.inure.R
+import app.simple.inure.preferences.AppearancePreferences
+import app.simple.inure.util.ColorUtils
+import app.simple.inure.util.ConditionUtils.invert
 
 class CustomProgressBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ProgressBar(context, attrs, defStyleAttr) {
 
     private var valueAnimator: ValueAnimator? = null
-    private val duration = 500L
+
+    init {
+        if (isInEditMode.invert()) {
+            progressTintList = ColorStateList.valueOf(AppearancePreferences.getAccentColor())
+            indeterminateTintList = ColorStateList.valueOf(AppearancePreferences.getAccentColor())
+            backgroundTintList = ColorStateList.valueOf(ColorUtils.lightenColor(AppearancePreferences.getAccentColor()))
+        }
+    }
 
     /**
      * Set progress but with animation for all API levels
      *
      * @param progress progress of the seekbar
      * @param animate animate the progress change
-     * @param fromStart start from the beginning or start from the already progressed value
      */
-    fun setProgress(progress: Int, animate: Boolean, fromStart: Boolean) {
+    fun animateProgress(progress: Int, animate: Boolean = true) {
         if (animate) {
-            valueAnimator = ValueAnimator.ofInt(if (fromStart) 0 else this.progress, progress)
+            valueAnimator = ValueAnimator.ofInt(this.progress, progress)
             valueAnimator?.interpolator = LinearOutSlowInInterpolator()
             valueAnimator?.duration = resources.getInteger(R.integer.animation_duration).toLong()
             valueAnimator?.addUpdateListener { animation -> setProgress(animation.animatedValue as Int) }
@@ -48,9 +57,8 @@ class CustomProgressBar @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
         clearAnimation()
-        valueAnimator?.cancel()
+        super.onDetachedFromWindow()
     }
 
     override fun clearAnimation() {

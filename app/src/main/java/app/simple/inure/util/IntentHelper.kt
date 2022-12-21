@@ -2,11 +2,14 @@ package app.simple.inure.util
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 object IntentHelper {
 
     const val INT_EXTRA = "int_extra"
+    const val LONG_EXTRA = "long_extra"
 
     /**
      * Quickly broadcast a application level local intent
@@ -44,5 +47,21 @@ object IntentHelper {
             intent.putExtra(INT_EXTRA, extra)
             LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
         }
+    }
+
+    fun String?.asUri(): Uri? {
+        return try {
+            Uri.parse(this)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun Uri?.openInBrowser(context: Context) {
+        this ?: return // Do nothing if uri is null
+
+        val browserIntent = Intent(Intent.ACTION_VIEW, this)
+        browserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        ContextCompat.startActivity(context, browserIntent, null)
     }
 }

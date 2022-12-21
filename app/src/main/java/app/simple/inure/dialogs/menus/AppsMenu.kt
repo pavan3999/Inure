@@ -16,19 +16,17 @@ import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.apk.utils.PackageUtils.launchThisPackage
 import app.simple.inure.constants.BundleConstants
+import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.dialogs.action.Preparing
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedDialogFragment
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedDialogFragment
 import app.simple.inure.glide.util.ImageLoader.loadAppIcon
 import app.simple.inure.preferences.BehaviourPreferences
 import app.simple.inure.preferences.DevelopmentPreferences
 import app.simple.inure.ui.panels.NotesEditor
 import app.simple.inure.ui.viewers.*
 import app.simple.inure.util.ConditionUtils.isNotZero
-import app.simple.inure.util.FragmentHelper
 import app.simple.inure.util.StatusBarHeight
 import app.simple.inure.util.ViewUtils
 import app.simple.inure.viewmodels.panels.QuickAppsViewModel
@@ -36,6 +34,7 @@ import app.simple.inure.viewmodels.panels.QuickAppsViewModel
 class AppsMenu : ScopedDialogFragment() {
 
     private lateinit var icon: ImageView
+    private lateinit var settings: DynamicRippleImageButton
     private lateinit var name: TypeFaceTextView
     private lateinit var packageName: TypeFaceTextView
 
@@ -60,6 +59,7 @@ class AppsMenu : ScopedDialogFragment() {
         val view = inflater.inflate(R.layout.dialog_apps_menu, container, false)
 
         icon = view.findViewById(R.id.fragment_app_info_icon)
+        settings = view.findViewById(R.id.settings_button)
         name = view.findViewById(R.id.fragment_app_name)
         packageName = view.findViewById(R.id.fragment_app_package_id)
 
@@ -78,9 +78,6 @@ class AppsMenu : ScopedDialogFragment() {
         toQuickApp = view.findViewById(R.id.to_quick_app)
 
         quickAppsViewModel = ViewModelProvider(requireActivity())[QuickAppsViewModel::class.java]
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-
-        (parentFragment as ScopedFragment).clearExitTransition()
 
         return view
     }
@@ -110,7 +107,7 @@ class AppsMenu : ScopedDialogFragment() {
             window.attributes.height = (displayMetrics.heightPixels * 1F / 100F * 60F).toInt()
         }
 
-        icon.loadAppIcon(packageInfo.packageName)
+        icon.loadAppIcon(packageInfo.packageName, packageInfo.applicationInfo.enabled)
 
         name.text = packageInfo.applicationInfo.name
         packageName.text = packageInfo.packageName
@@ -127,20 +124,13 @@ class AppsMenu : ScopedDialogFragment() {
             kotlin.runCatching {
                 packageInfo.launchThisPackage(requireContext())
             }.onFailure {
-                val e = Error.newInstance(it.stackTraceToString())
-                e.show(childFragmentManager, "error_dialog")
-                e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                    override fun onDismiss() {
-                        dismiss()
-                    }
-                })
+                it.printStackTrace()
+                showError(it.stackTraceToString())
             }
         }
 
         appInformation.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Information.newInstance(packageInfo),
-                                        "information")
+            openFragmentSlide(Information.newInstance(packageInfo), "information")
         }
 
         send.setOnClickListener {
@@ -149,64 +139,46 @@ class AppsMenu : ScopedDialogFragment() {
         }
 
         permissions.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Permissions.newInstance(packageInfo),
-                                        "permissions")
+            openFragmentSlide(Permissions.newInstance(packageInfo), "permissions")
         }
 
         activities.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Activities.newInstance(packageInfo),
-                                        "activities")
+            openFragmentSlide(Activities.newInstance(packageInfo), "activities")
         }
 
         services.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Services.newInstance(packageInfo),
-                                        "services")
+            openFragmentSlide(Services.newInstance(packageInfo), "services")
         }
 
         receivers.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Receivers.newInstance(packageInfo),
-                                        "receivers")
+            openFragmentSlide(Receivers.newInstance(packageInfo), "receivers")
         }
 
         providers.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Providers.newInstance(packageInfo),
-                                        "providers")
+            openFragmentSlide(Providers.newInstance(packageInfo), "providers")
         }
 
         trackers.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Trackers.newInstance(packageInfo),
-                                        "trackers")
+            openFragmentSlide(Trackers.newInstance(packageInfo), "trackers")
         }
 
         manifest.setOnClickListener {
-            if (DevelopmentPreferences.isWebViewXmlViewer()) {
-                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                            XMLViewerWebView.newInstance(packageInfo, true, "AndroidManifest.xml"),
-                                            "xml")
+            if (DevelopmentPreferences.get(DevelopmentPreferences.isWebViewXmlViewer)) {
+                openFragmentSlide(XMLViewerWebView.newInstance(packageInfo, true, "AndroidManifest.xml"), "xml")
             } else {
-                FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                            XMLViewerTextView.newInstance(packageInfo, true, "AndroidManifest.xml"),
-                                            "xml")
+                openFragmentSlide(XMLViewerTextView.newInstance(packageInfo, true, "AndroidManifest.xml"), "xml")
             }
         }
 
         notes.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        NotesEditor.newInstance(packageInfo),
-                                        "notes_editor")
+            openFragmentSlide(NotesEditor.newInstance(packageInfo), "notes_editor")
         }
 
         quickAppsViewModel.getSimpleQuickAppList().observe(viewLifecycleOwner) {
             if (it.size.isNotZero()) {
                 for (i in it) {
                     if (i.packageName == packageInfo.packageName) {
-                        toQuickApp.setText(R.string.remove_from_quick_apps)
+                        toQuickApp.setText(R.string.remove_from_home_screen)
                         isAlreadyInQuickApp = true
                         break
                     } else {
@@ -218,7 +190,7 @@ class AppsMenu : ScopedDialogFragment() {
             }
 
             if (!isAlreadyInQuickApp) {
-                toQuickApp.setText(R.string.add_to_quick_apps)
+                toQuickApp.setText(R.string.pin_to_home_panel)
                 isAlreadyInQuickApp = false
             }
         }
@@ -229,6 +201,10 @@ class AppsMenu : ScopedDialogFragment() {
             } else {
                 quickAppsViewModel.addQuickApp(packageInfo.packageName)
             }
+        }
+
+        settings.setOnClickListener {
+            openSettings()
         }
     }
 

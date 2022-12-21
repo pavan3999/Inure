@@ -2,14 +2,14 @@ package app.simple.inure.viewmodels.panels
 
 import android.app.Application
 import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.text.SpannableStringBuilder
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import app.simple.inure.apk.utils.PackageUtils
+import app.simple.inure.apk.utils.PackageUtils.getInstalledPackages
 import app.simple.inure.database.instances.NotesDatabase
-import app.simple.inure.extension.viewmodels.WrappedViewModel
+import app.simple.inure.extensions.viewmodels.WrappedViewModel
 import app.simple.inure.models.NotesModel
 import app.simple.inure.models.NotesPackageInfo
 import app.simple.inure.text.SpannableSerializer
@@ -35,14 +35,19 @@ class NotesViewModel(application: Application) : WrappedViewModel(application) {
         }
     }
 
+    private val delete = MutableLiveData<Int>()
+
     fun getNotesData(): LiveData<ArrayList<NotesPackageInfo>> {
         return notesData
     }
 
+    fun getDelete(): LiveData<Int> {
+        return delete
+    }
+
     private fun loadNotesData() {
         viewModelScope.launch(Dispatchers.Default) {
-            val apps = packageManager.getInstalledPackages(PackageManager.GET_META_DATA) as ArrayList
-            notesData.postValue(getNotesData(apps))
+            notesData.postValue(getNotesData(packageManager.getInstalledPackages()))
         }
     }
 
@@ -74,7 +79,7 @@ class NotesViewModel(application: Application) : WrappedViewModel(application) {
         return list
     }
 
-    fun deleteNoteData(notesPackageInfo: NotesPackageInfo?) {
+    fun deleteNoteData(notesPackageInfo: NotesPackageInfo?, position: Int) {
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
                 notesDatabase = NotesDatabase.getInstance(context)
@@ -86,10 +91,20 @@ class NotesViewModel(application: Application) : WrappedViewModel(application) {
                         notesPackageInfo.dateUpdated)
 
                 notesDatabase?.getNotesDao()?.deleteNote(notesModel)
-            }.onSuccess {
-                loadNotesData()
+                delete.postValue(position)
+            }.getOrElse {
+                postError(it)
             }
         }
+    }
+
+    override fun onAppUninstalled(packageName: String?) {
+        super.onAppUninstalled(packageName)
+        loadNotesData()
+    }
+
+    fun refreshNotes() {
+        loadNotesData()
     }
 
     override fun onCleared() {

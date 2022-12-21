@@ -14,9 +14,8 @@ import app.simple.inure.decorations.fastscroll.FastScrollerBuilder
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceEditText
 import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.dialogs.miscellaneous.Error
 import app.simple.inure.exceptions.LargeStringException
-import app.simple.inure.extension.activities.BaseActivity
+import app.simple.inure.extensions.activities.BaseActivity
 import app.simple.inure.popups.app.PopupXmlViewer
 import app.simple.inure.preferences.FormattingPreferences
 import app.simple.inure.util.ViewUtils.visible
@@ -25,7 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import org.apache.commons.io.IOUtils
 import java.io.IOException
 
 class TextViewerActivity : BaseActivity() {
@@ -34,7 +32,7 @@ class TextViewerActivity : BaseActivity() {
     private lateinit var path: TypeFaceTextView
     private lateinit var options: DynamicRippleImageButton
 
-    private val exportManifest = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri: Uri? ->
+    private val exportManifest = registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri: Uri? ->
         if (uri == null) {
             return@registerForActivityResult
         }
@@ -87,8 +85,10 @@ class TextViewerActivity : BaseActivity() {
         lifecycleScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
                 withTimeout(3000) {
-                    val string = contentResolver.openInputStream(intent.data!!)!!.use {
-                        IOUtils.toString(it, "UTF-8")
+                    val string = contentResolver.openInputStream(intent.data!!)!!.use { inputStream ->
+                        inputStream.bufferedReader().use {
+                            it.readText()
+                        }
                     }
 
                     withContext(Dispatchers.Main) {
@@ -101,13 +101,7 @@ class TextViewerActivity : BaseActivity() {
                 }
             }.getOrElse {
                 withContext(Dispatchers.Main) {
-                    val e = Error.newInstance(it.stackTraceToString())
-                    e.show(supportFragmentManager, "error_dialog")
-                    e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                        override fun onDismiss() {
-                            onBackPressed()
-                        }
-                    })
+                    showError(it.stackTraceToString())
                 }
             }
         }

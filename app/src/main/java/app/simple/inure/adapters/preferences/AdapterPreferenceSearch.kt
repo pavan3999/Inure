@@ -11,21 +11,21 @@ import app.simple.inure.decorations.ripple.DynamicRippleConstraintLayout
 import app.simple.inure.decorations.theme.ThemeIcon
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.interfaces.adapters.PreferencesCallbacks
-import app.simple.inure.models.PreferenceSearchModel
+import app.simple.inure.models.PreferenceModel
 import app.simple.inure.preferences.DevelopmentPreferences
 import app.simple.inure.util.AdapterUtils
 
 class AdapterPreferenceSearch : RecyclerView.Adapter<AdapterPreferenceSearch.Holder>() {
 
     private var preferencesCallbacks: PreferencesCallbacks? = null
-    private var isDrawableHidden = DevelopmentPreferences.isPreferencesIndicatorHidden()
+    private var isDrawableHidden = DevelopmentPreferences.get(DevelopmentPreferences.preferencesIndicator)
 
     var keyword: String? = null
         set(value) {
             field = value?.trim()
         }
 
-    var list = arrayListOf<PreferenceSearchModel>()
+    var list = arrayListOf<PreferenceModel>()
         @SuppressLint("NotifyDataSetChanged")
         set(value) {
             field = value

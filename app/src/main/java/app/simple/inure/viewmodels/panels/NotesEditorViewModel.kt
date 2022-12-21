@@ -8,7 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import app.simple.inure.R
 import app.simple.inure.database.instances.NotesDatabase
-import app.simple.inure.extension.viewmodels.WrappedViewModel
+import app.simple.inure.extensions.viewmodels.WrappedViewModel
 import app.simple.inure.models.NotesModel
 import app.simple.inure.models.NotesPackageInfo
 import app.simple.inure.text.SpannableSerializer
@@ -43,10 +43,6 @@ class NotesEditorViewModel(application: Application, private val packageInfo: Pa
         }
     }
 
-    private val error: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
-
     private val saved = MutableLiveData<Int>()
 
     fun getNoteData(): LiveData<NotesPackageInfo> {
@@ -61,17 +57,18 @@ class NotesEditorViewModel(application: Application, private val packageInfo: Pa
         return saved
     }
 
-    fun getError(): LiveData<String> {
-        return error
-    }
-
     private fun loadNoteData() {
         viewModelScope.launch(Dispatchers.IO) {
             notesDatabase = NotesDatabase.getInstance(context)
 
             for (note in notesDatabase!!.getNotesDao()!!.getAllNotes()) {
                 if (note.packageName == packageInfo.packageName) {
-                    noteData.postValue(NotesPackageInfo(packageInfo, gson.fromJson(note.note, SpannableStringBuilder::class.java), note.dateCreated, note.dateChanged))
+                    noteData.postValue(
+                            NotesPackageInfo(
+                                    packageInfo,
+                                    gson.fromJson(note.note, SpannableStringBuilder::class.java),
+                                    note.dateCreated,
+                                    note.dateChanged))
                     break
                 }
             }
@@ -90,11 +87,10 @@ class NotesEditorViewModel(application: Application, private val packageInfo: Pa
                             notesPackageInfo.dateCreated,
                             System.currentTimeMillis()))
 
-                delay(1500)
+                delay(100)
                 saved.postValue(saved.value?.plus(1) ?: 0)
             }.onFailure {
-                it.printStackTrace()
-                error.postValue(it.stackTraceToString())
+                postError(it)
                 saved.postValue(-1 /* Save has failed, tell the UI */)
             }
         }
@@ -107,14 +103,14 @@ class NotesEditorViewModel(application: Application, private val packageInfo: Pa
                     R.drawable.ic_format_italic,
                     R.drawable.ic_format_underlined,
                     R.drawable.ic_format_strikethrough,
-                    R.drawable.ic_format_size_lower,
-                    R.drawable.ic_format_size_upper,
-                    R.drawable.ic_format_list_bulleted,
+                    // R.drawable.ic_format_size_lower,
+                    // R.drawable.ic_format_size_upper,
+                    // R.drawable.ic_format_list_bulleted,
                     R.drawable.ic_format_superscript,
                     R.drawable.ic_format_subscript,
                     R.drawable.ic_format_paint,
-                    R.drawable.ic_format_quote,
-                    R.drawable.ic_blur_on
+                    // R.drawable.ic_format_quote,
+                    // R.drawable.ic_blur_on
                     // R.drawable.ic_format_align_left,
                     // R.drawable.ic_format_align_center,
                     // R.drawable.ic_format_align_right

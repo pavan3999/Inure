@@ -52,12 +52,13 @@
 
     </LinearLayout>
 
-    <app.simple.inure.decorations.checkbox.CheckBox
+    <app.simple.inure.decorations.checkbox.InureCheckBox
         android:id="@+id/shortcut_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:clipChildren="false"
+        android:layout_marginEnd="10dp"
         android:clipToPadding="false" />
 
 </app.simple.inure.decorations.ripple.DynamicRippleLinearLayout>

@@ -12,9 +12,10 @@ import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.subpanels.ProviderInfoFactory
 import app.simple.inure.models.ProviderInfoModel
+import app.simple.inure.util.ParcelUtils.parcelable
 import app.simple.inure.viewmodels.subviewers.ProviderInfoViewModel
 
 class ProviderInfo : ScopedFragment() {
@@ -32,10 +33,10 @@ class ProviderInfo : ScopedFragment() {
         recyclerView = view.findViewById(R.id.activity_info_recycler_view)
         backButton = view.findViewById(R.id.activity_info_back_button)
 
-        with(requireArguments().getParcelable<ProviderInfoModel>(BundleConstants.providerInfo)!!) {
-            packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
+        with(requireArguments().parcelable<ProviderInfoModel>(BundleConstants.providerInfo)!!) {
+            packageInfo = requireArguments().parcelable(BundleConstants.packageInfo)!!
             this@ProviderInfo.name.text = name
-            providerInfoFactory = ProviderInfoFactory(requireActivity().application, this, packageInfo)
+            providerInfoFactory = ProviderInfoFactory(this, packageInfo)
         }
 
         providerInfoViewModel = ViewModelProvider(this, providerInfoFactory).get(ProviderInfoViewModel::class.java)
@@ -48,12 +49,12 @@ class ProviderInfo : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        providerInfoViewModel.getProviderInfo().observe(viewLifecycleOwner, {
+        providerInfoViewModel.getProviderInfo().observe(viewLifecycleOwner) {
             recyclerView.adapter = AdapterInformation(it)
-        })
+        }
 
         backButton.setOnClickListener {
-            requireActivity().onBackPressed()
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
     }
 

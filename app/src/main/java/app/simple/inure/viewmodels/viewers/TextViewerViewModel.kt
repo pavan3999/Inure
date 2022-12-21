@@ -7,9 +7,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import app.simple.inure.apk.xml.XML
+import app.simple.inure.util.StringUtils.readTextSafely
+import app.simple.inure.util.XMLUtils.formatXML
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.apache.commons.io.IOUtils
 import java.io.BufferedInputStream
 import java.util.*
 import java.util.zip.ZipEntry
@@ -41,22 +42,21 @@ class TextViewerViewModel(private val packageInfo: PackageInfo, private val path
                                         path.endsWith("xml") -> {
                                             text.postValue(
                                                     XML(packageInfo.applicationInfo.sourceDir).use {
-                                                        it.transBinaryXml(path)
+                                                        it.transBinaryXml(path).formatXML()
                                                     })
                                         }
                                         else -> {
-                                            text.postValue(
-                                                    IOUtils.toString(
-                                                            BufferedInputStream(zipFile.getInputStream(entry)),
-                                                            "UTF-8"))
+                                            text.postValue(BufferedInputStream(zipFile.getInputStream(entry)).readTextSafely())
                                         }
                                     }
                                 }
                             }.getOrElse {
                                 text.postValue(
-                                        IOUtils.toString(
-                                                BufferedInputStream(zipFile.getInputStream(entry)),
-                                                "UTF-8"))
+                                        BufferedInputStream(zipFile.getInputStream(entry)).use { bufferedInputStream ->
+                                            bufferedInputStream.bufferedReader().use {
+                                                it.readText()
+                                            }
+                                        })
                             }
                         }
                     }

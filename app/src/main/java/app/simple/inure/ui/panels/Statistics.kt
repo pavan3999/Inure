@@ -11,22 +11,25 @@ import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.adapters.ui.AdapterUsageStats
+import app.simple.inure.constants.BottomMenuConstants
+import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.dialogs.menus.AppsMenu
-import app.simple.inure.dialogs.menus.UsageStatsMenu
-import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
+import app.simple.inure.dialogs.usagestats.UsageStatsMenu
+import app.simple.inure.dialogs.miscellaneous.UsageStatsPermission
+import app.simple.inure.dialogs.miscellaneous.UsageStatsPermission.Companion.showUsageStatsPermissionDialog
+import app.simple.inure.extensions.fragments.ScopedFragment
+import app.simple.inure.interfaces.adapters.AdapterCallbacks
 import app.simple.inure.popups.usagestats.PopupAppsCategory
 import app.simple.inure.popups.usagestats.PopupUsageStatsSorting
 import app.simple.inure.preferences.StatisticsPreferences
-import app.simple.inure.ui.app.AppInfo
-import app.simple.inure.util.FragmentHelper
+import app.simple.inure.util.PermissionUtils.checkForUsageAccessPermission
 import app.simple.inure.viewmodels.panels.UsageStatsViewModel
 
 class Statistics : ScopedFragment() {
 
     private lateinit var recyclerView: CustomVerticalRecyclerView
-    private lateinit var adapterUsageStats: AdapterUsageStats
+    private var adapterUsageStats: AdapterUsageStats? = null
     private lateinit var usageStatsViewModel: UsageStatsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -41,13 +44,24 @@ class Statistics : ScopedFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        showLoader()
+
+        if (!requireContext().checkForUsageAccessPermission()) {
+            childFragmentManager.showUsageStatsPermissionDialog().setOnUsageStatsPermissionCallbackListener(object : UsageStatsPermission.Companion.UsageStatsPermissionCallbacks {
+                override fun onClosedAfterGrant() {
+                    adapterUsageStats?.enableLoader()
+                    usageStatsViewModel.loadAppStats()
+                }
+            })
+        }
 
         usageStatsViewModel.usageData.observe(viewLifecycleOwner) {
             postponeEnterTransition()
+            hideLoader()
 
             adapterUsageStats = AdapterUsageStats(it)
 
-            adapterUsageStats.setOnStatsCallbackListener(object : AppsAdapterCallbacks {
+            adapterUsageStats?.setOnStatsCallbackListener(object : AdapterCallbacks {
                 override fun onAppClicked(packageInfo: PackageInfo, icon: ImageView) {
                     openAppInfo(packageInfo, icon)
                 }
@@ -56,29 +70,27 @@ class Statistics : ScopedFragment() {
                     AppsMenu.newInstance(packageInfo)
                         .show(childFragmentManager, "apps_menu")
                 }
-
-                override fun onSortPressed(view: View) {
-                    PopupUsageStatsSorting(view)
-                }
-
-                override fun onFilterPressed(view: View) {
-                    PopupAppsCategory(view)
-                }
-
-                override fun onSettingsPressed(view: View) {
-                    UsageStatsMenu.newInstance()
-                        .show(childFragmentManager, "menu")
-                }
-
-                override fun onSearchPressed(view: View) {
-                    clearTransitions()
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                Search.newInstance(true),
-                                                "search")
-                }
             })
 
             recyclerView.adapter = adapterUsageStats
+
+            bottomRightCornerMenu?.initBottomMenuWithRecyclerView(BottomMenuConstants.getAllAppsBottomMenuItems(), recyclerView) { id, view ->
+                when (id) {
+                    R.drawable.ic_sort -> {
+                        PopupUsageStatsSorting(view)
+                    }
+                    R.drawable.ic_filter -> {
+                        PopupAppsCategory(view)
+                    }
+                    R.drawable.ic_settings -> {
+                        UsageStatsMenu.newInstance()
+                            .show(childFragmentManager, "menu")
+                    }
+                    R.drawable.ic_search -> {
+                        openFragmentSlide(Search.newInstance(true), "search")
+                    }
+                }
+            }
 
             (view.parent as? ViewGroup)?.doOnPreDraw {
                 startPostponedEnterTransition()
@@ -86,17 +98,13 @@ class Statistics : ScopedFragment() {
         }
     }
 
-    private fun openAppInfo(applicationInfo: PackageInfo, icon: ImageView) {
-        FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                    AppInfo.newInstance(applicationInfo, icon.transitionName),
-                                    icon, "app_info")
-    }
-
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             StatisticsPreferences.statsInterval,
             StatisticsPreferences.isUnusedHidden,
-            StatisticsPreferences.appsCategory -> {
+            StatisticsPreferences.appsCategory,
+            StatisticsPreferences.statsEngine -> {
+                adapterUsageStats?.enableLoader()
                 usageStatsViewModel.loadAppStats()
             }
             StatisticsPreferences.isSortingReversed,
@@ -105,7 +113,7 @@ class Statistics : ScopedFragment() {
             }
             StatisticsPreferences.limitHours -> {
                 handler.postDelayed(
-                        { adapterUsageStats.notifyAllData() }, 500)
+                        { adapterUsageStats?.notifyAllData() }, 500)
             }
         }
     }
@@ -116,9 +124,10 @@ class Statistics : ScopedFragment() {
     }
 
     companion object {
-        fun newInstance(): Statistics {
+        fun newInstance(loading: Boolean = false): Statistics {
             val args = Bundle()
             val fragment = Statistics()
+            args.putBoolean(BundleConstants.loading, loading)
             fragment.arguments = args
             return fragment
         }

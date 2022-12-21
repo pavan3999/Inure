@@ -2,6 +2,7 @@ package app.simple.inure.preferences
 
 import android.content.Context
 import android.content.SharedPreferences
+import app.simple.inure.util.NullSafety.isNull
 
 object SharedPreferences {
 
@@ -9,7 +10,9 @@ object SharedPreferences {
     private var sharedPreferences: SharedPreferences? = null
 
     fun init(context: Context) {
-        sharedPreferences = context.getSharedPreferences(preferences, Context.MODE_PRIVATE)
+        if (sharedPreferences.isNull()) {
+            sharedPreferences = context.getSharedPreferences(preferences, Context.MODE_PRIVATE)
+        }
     }
 
     /**
@@ -21,6 +24,32 @@ object SharedPreferences {
      */
     fun getSharedPreferences(): SharedPreferences {
         return sharedPreferences ?: throw NullPointerException()
+    }
+
+    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        getSharedPreferences().registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregisterListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        getSharedPreferences().unregisterOnSharedPreferenceChangeListener(listener)
+    }
+
+    /**
+     * Use this function to register shared preference change listener if
+     * the current context has [SharedPreferences.OnSharedPreferenceChangeListener]
+     * implemented.
+     */
+    fun SharedPreferences.OnSharedPreferenceChangeListener.registerSharedPreferenceChangeListener() {
+        registerListener(this)
+    }
+
+    /**
+     * Use this function to unregister shared preference change listener if
+     * the current context has [SharedPreferences.OnSharedPreferenceChangeListener]
+     * implemented.
+     */
+    fun SharedPreferences.OnSharedPreferenceChangeListener.unregisterSharedPreferenceChangeListener() {
+        unregisterListener(this)
     }
 
     /**
@@ -35,5 +64,9 @@ object SharedPreferences {
             init(context)
             return sharedPreferences!!
         }
+    }
+
+    fun getSharedPreferencesPath(context: Context): String {
+        return context.applicationInfo.dataDir + "/shared_prefs/" + preferences + ".xml"
     }
 }

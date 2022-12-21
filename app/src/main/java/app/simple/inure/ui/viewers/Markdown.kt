@@ -17,11 +17,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
+import app.simple.inure.constants.MimeConstants
 import app.simple.inure.decorations.fastscroll.FastScrollerBuilder
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.MarkedView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.panels.TextViewViewModelFactory
 import app.simple.inure.popups.app.PopupXmlViewer
 import app.simple.inure.viewmodels.viewers.TextViewerViewModel
@@ -40,7 +41,7 @@ class Markdown : ScopedFragment() {
 
     private var backPress: OnBackPressedDispatcher? = null
 
-    private val exportText = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri: Uri? ->
+    private val exportText = registerForActivityResult(ActivityResultContracts.CreateDocument(MimeConstants.markdownType)) { uri: Uri? ->
         if (uri == null) {
             // Back button pressed.
             return@registerForActivityResult
@@ -64,16 +65,14 @@ class Markdown : ScopedFragment() {
         codeView = view.findViewById(R.id.code_viewer)
         path = view.findViewById(R.id.code_name)
         options = view.findViewById(R.id.code_viewer_options)
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
 
         textViewViewModelFactory = TextViewViewModelFactory(
                 packageInfo,
                 requireArguments().getString("path")!!,
-                requireActivity().application,
         )
 
         backPress = requireActivity().onBackPressedDispatcher
-        textViewerViewModel = ViewModelProvider(this, textViewViewModelFactory).get(TextViewerViewModel::class.java)
+        textViewerViewModel = ViewModelProvider(this, textViewViewModelFactory)[TextViewerViewModel::class.java]
 
         path.text = requireArguments().getString("path")!!
 
@@ -128,7 +127,7 @@ class Markdown : ScopedFragment() {
                     codeView.settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 } else {
                     remove()
-                    requireActivity().onBackPressed()
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
                 }
             }
         })

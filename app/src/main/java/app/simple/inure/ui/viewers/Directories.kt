@@ -9,7 +9,7 @@ import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.util.FileUtils
 import app.simple.inure.util.TextViewUtils.makeClickable
 
@@ -25,8 +25,6 @@ class Directories : ScopedFragment() {
         apkDir = view.findViewById(R.id.sub_directory_base_package)
         dataDir = view.findViewById(R.id.sub_directory_data)
         back = view.findViewById(R.id.app_info_back_button)
-
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
 
         return view
     }
@@ -48,7 +46,7 @@ class Directories : ScopedFragment() {
         }))
 
         back.setOnClickListener {
-            activity?.onBackPressed()
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
     }
 

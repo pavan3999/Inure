@@ -12,25 +12,22 @@ import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
+import androidx.media.app.NotificationCompat.MediaStyle
 import app.simple.inure.R
 import app.simple.inure.activities.association.AudioPlayerActivity
-import app.simple.inure.activities.association.FullScreenAudioPlayerActivity
 import app.simple.inure.constants.ServiceConstants
 import app.simple.inure.exceptions.InureMediaEngineException
+import app.simple.inure.loaders.MetadataHelper
 import app.simple.inure.models.AudioMetaData
-import app.simple.inure.preferences.DevelopmentPreferences
 import app.simple.inure.receivers.MediaButtonIntentReceiver
+import app.simple.inure.util.ConditionUtils.isZero
 import app.simple.inure.util.IntentHelper
-import app.simple.inure.util.MetadataHelper
 import app.simple.inure.util.NullSafety.isNotNull
 import app.simple.inure.util.NullSafety.isNull
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.math.ln
 
@@ -39,6 +36,7 @@ class AudioService : Service(),
                      MediaPlayer.OnCompletionListener,
                      MediaPlayer.OnPreparedListener,
                      MediaPlayer.OnErrorListener,
+                     MediaPlayer.OnBufferingUpdateListener,
                      MediaPlayer.OnSeekCompleteListener,
                      SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -47,6 +45,8 @@ class AudioService : Service(),
     private val audioBecomingNoisyFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
 
     private var mediaSessionCompat: MediaSessionCompat? = null
+    private var mediaControllerCompat: MediaControllerCompat? = null
+    private var mediaMetadataCompat: MediaMetadataCompat? = null
     private var audioManager: AudioManager? = null
     private var focusRequest: AudioFocusRequest? = null
     private var notificationManager: NotificationManager? = null
@@ -107,10 +107,15 @@ class AudioService : Service(),
                 ServiceConstants.actionTogglePause -> {
                     changePlayerState()
                 }
-                ServiceConstants.actionQuitService -> {
-                    stopForeground(true)
+                ServiceConstants.actionQuitMusicService -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        stopForeground(true)
+                    }
                     stopSelf()
-                    IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionQuitService, applicationContext)
+                    IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionQuitMusicService, applicationContext)
                 }
             }
         }
@@ -173,8 +178,13 @@ class AudioService : Service(),
     }
 
     override fun onCompletion(mp: MediaPlayer?) {
-        IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionQuitService, applicationContext)
-        stopForeground(true)
+        IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionQuitMusicService, applicationContext)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
     }
 
     override fun onPrepared(mp: MediaPlayer?) {
@@ -208,6 +218,16 @@ class AudioService : Service(),
         return true
     }
 
+    override fun onBufferingUpdate(mp: MediaPlayer, percent: Int) {
+        val value = if (mp.duration.isZero()) {
+            percent
+        } else {
+            (mp.duration * (percent / 100F)).toInt()
+        }
+
+        IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionBuffering, applicationContext, value)
+    }
+
     override fun onSeekComplete(mp: MediaPlayer?) {
         /* no-op */
     }
@@ -216,7 +236,7 @@ class AudioService : Service(),
         val mediaButtonReceiverComponentName = ComponentName(applicationContext, MediaButtonIntentReceiver::class.java)
         val mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
         mediaButtonIntent.component = mediaButtonReceiverComponentName
-        val mediaButtonReceiverPendingIntent = PendingIntent.getBroadcast(applicationContext, 110, mediaButtonIntent, PendingIntent.FLAG_IMMUTABLE)
+        val mediaButtonReceiverPendingIntent = PendingIntent.getBroadcast(applicationContext, 4558, mediaButtonIntent, PendingIntent.FLAG_IMMUTABLE)
         mediaSessionCompat = MediaSessionCompat(this, getString(R.string.mini_player_name), mediaButtonReceiverComponentName, mediaButtonReceiverPendingIntent)
         mediaSessionCompat!!.setCallback(object : MediaSessionCompat.Callback() {
             override fun onPlay() {
@@ -236,7 +256,12 @@ class AudioService : Service(),
             }
 
             override fun onStop() {
-                stopForeground(true)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_DETACH)
+                } else {
+                    @Suppress("DEPRECATION")
+                    stopForeground(true)
+                }
                 stopSelf()
             }
 
@@ -253,8 +278,8 @@ class AudioService : Service(),
         mediaSessionCompat!!.setFlags(MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS or MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
         mediaSessionCompat!!.setMediaButtonReceiver(mediaButtonReceiverPendingIntent)
         mediaSessionCompat!!.isActive = true
-        //mediaControllerCompat = mediaSessionCompat.controller
-        //mediaMetadataCompat = mediaControllerCompat.metadata
+        mediaControllerCompat = mediaSessionCompat!!.controller
+        // mediaMetadataCompat = mediaControllerCompat!!.metadata
     }
 
     private fun setPlaybackState(playbackState: Int) {
@@ -267,31 +292,26 @@ class AudioService : Service(),
     }
 
     private fun setupMetadata() {
-        CoroutineScope(Dispatchers.IO).launch {
-            kotlin.runCatching {
-                metaData = MetadataHelper.getAudioMetadata(applicationContext, audioUri!!)
+        kotlin.runCatching {
+            metaData = MetadataHelper.getAudioMetadata(applicationContext, audioUri!!)
 
-                val mediaMetadata = MediaMetadataCompat.Builder()
-                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, metaData?.title)
-                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, metaData?.artists)
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, metaData?.album)
-                    // .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, metaData?.artUri)
-                    .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, mediaPlayer.duration.toLong())
-                    .build()
+            mediaMetadataCompat = MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, metaData?.title)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, metaData?.artists)
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, metaData?.album)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, mediaPlayer.duration.toLong())
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, metaData?.art)
+                // .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, metaData?.artUri)
+                .build()
 
-                withContext(Dispatchers.Main) {
-                    IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionMetaData, applicationContext)
-                    setupMediaSession()
-                    createNotificationChannel()
-                    showNotification(generateAction(R.drawable.ic_pause, "pause", ServiceConstants.actionPause))
-                    mediaSessionCompat?.setMetadata(mediaMetadata)
-                    setPlaybackState(PlaybackStateCompat.STATE_PLAYING)
-                }
-            }.getOrElse {
-                withContext(Dispatchers.Main) {
-                    IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionMediaError, applicationContext, it.stackTraceToString())
-                }
-            }
+            IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionMetaData, applicationContext)
+            setupMediaSession()
+            createNotificationChannel()
+            showNotification(generateAction(R.drawable.ic_pause, "pause", ServiceConstants.actionPause))
+            mediaSessionCompat?.setMetadata(mediaMetadataCompat)
+            setPlaybackState(PlaybackStateCompat.STATE_PLAYING)
+        }.getOrElse {
+            IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionMediaError, applicationContext, it.stackTraceToString())
         }
     }
 
@@ -323,12 +343,17 @@ class AudioService : Service(),
         mediaPlayer.setOnCompletionListener(this)
         mediaPlayer.setOnPreparedListener(this)
         mediaPlayer.setOnSeekCompleteListener(this)
+        mediaPlayer.setOnBufferingUpdateListener(this)
         mediaPlayer.setDataSource(applicationContext, uri)
         mediaPlayer.prepareAsync()
     }
 
     internal fun getProgress(): Int {
-        return mediaPlayer.currentPosition
+        return kotlin.runCatching {
+            mediaPlayer.currentPosition
+        }.getOrElse {
+            0
+        }
     }
 
     internal fun getDuration(): Int {
@@ -377,8 +402,15 @@ class AudioService : Service(),
                         if (mediaPlayer.isPlaying) {
                             mediaPlayer.pause()
                             setPlaybackState(PlaybackStateCompat.STATE_PAUSED)
-                            showNotification(generateAction(R.drawable.ic_play, "play", ServiceConstants.actionPlay))
-                            stopForeground(false)
+                            kotlin.runCatching {
+                                showNotification(generateAction(R.drawable.ic_play, "play", ServiceConstants.actionPlay))
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                    stopForeground(STOP_FOREGROUND_REMOVE)
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    stopForeground(true)
+                                }
+                            }
                         }
                         timer!!.cancel()
                         timer!!.purge()
@@ -415,7 +447,9 @@ class AudioService : Service(),
             if (requestAudioFocus()) {
                 mediaPlayer.start()
                 setPlaybackState(PlaybackStateCompat.STATE_PLAYING)
-                showNotification(generateAction(R.drawable.ic_pause, "pause", ServiceConstants.actionPause))
+                kotlin.runCatching {
+                    showNotification(generateAction(R.drawable.ic_pause, "pause", ServiceConstants.actionPause))
+                }
                 IntentHelper.sendLocalBroadcastIntent(ServiceConstants.actionPlay, applicationContext)
             }
         }
@@ -469,40 +503,41 @@ class AudioService : Service(),
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name: CharSequence = getString(R.string.audio_player)
             val channel = NotificationChannel(channelId, name, NotificationManager.IMPORTANCE_LOW)
+            channel.enableVibration(false)
+            channel.enableLights(false)
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
     }
 
+    @Throws(NullPointerException::class)
     private fun showNotification(action: NotificationCompat.Action) {
         notificationManager = baseContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val intentAction = if (DevelopmentPreferences.isAudioPlayerFullScreen()) {
-            Intent(this, FullScreenAudioPlayerActivity::class.java)
-        } else {
-            Intent(this, AudioPlayerActivity::class.java)
+        val notificationClick = with(Intent(this, AudioPlayerActivity::class.java)) {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            data = audioUri
+            PendingIntent.getActivity(applicationContext, 111, this, PendingIntent.FLAG_IMMUTABLE)
         }
 
-        intentAction.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        intentAction.data = audioUri
+        val close = generateAction(R.drawable.ic_close, "Close", ServiceConstants.actionQuitMusicService)
 
-        val buttonClick = PendingIntent.getActivity(this, 111, intentAction, PendingIntent.FLAG_UPDATE_CURRENT)
-
-        builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_audio_placeholder)
+        builder = NotificationCompat.Builder(applicationContext, channelId)
+            .setSmallIcon(R.drawable.ic_main_app_icon_regular)
             .setLargeIcon(metaData?.art)
             .addAction(action) /* Play Pause Action */
-            .addAction(generateAction(R.drawable.ic_close, "Close", ServiceConstants.actionQuitService))
+            .addAction(close)
             .setContentTitle(metaData?.title)
             .setContentText(metaData?.artists)
-            .setSubText(metaData?.artists)
-            .setContentIntent(buttonClick)
+            .setSubText(metaData?.album)
+            .setContentIntent(notificationClick)
             .setShowWhen(false)
             .setColorized(true)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            // Setting this style will not show notification icon in some devices
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setMediaSession(mediaSessionCompat!!.sessionToken))
-            .setOnlyAlertOnce(true)
+            .setCategory(Notification.CATEGORY_TRANSPORT)
+            .setStyle(MediaStyle().setMediaSession(mediaSessionCompat!!.sessionToken)
+                          .setShowActionsInCompactView(0, 1)
+                          .setShowCancelButton(true)
+                          .setCancelButtonIntent(close.getActionIntent()))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         val notification: Notification = builder!!.build()
@@ -513,20 +548,12 @@ class AudioService : Service(),
     private fun generateAction(icon: Int, title: String, action: String): NotificationCompat.Action {
         val intent = Intent(this, AudioService::class.java)
         intent.action = action
-        val close = PendingIntent.getService(this, 5087847, intent, PendingIntent.FLAG_IMMUTABLE)
+        val close = PendingIntent.getService(this, (0..100).random(), intent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Action.Builder(icon, title, close).build()
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        when (key) {
-            DevelopmentPreferences.isAudioPlayerFullScreen -> {
-                if (mediaPlayer.isPlaying) {
-                    showNotification(generateAction(R.drawable.ic_pause, "pause", ServiceConstants.actionPause))
-                } else {
-                    showNotification(generateAction(R.drawable.ic_play, "play", ServiceConstants.actionPlay))
-                }
-            }
-        }
+        /* no-op */
     }
 
     override fun onDestroy() {

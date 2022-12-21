@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.panels.NotesViewModelFactory
 import app.simple.inure.models.NotesPackageInfo
 import app.simple.inure.viewmodels.panels.NotesEditorViewModel
@@ -30,8 +30,7 @@ class Note : ScopedFragment() {
         packageId = view.findViewById(R.id.fragment_app_package_id)
         note = view.findViewById(R.id.text_viewer)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-        val factory = NotesViewModelFactory(requireApplication(), packageInfo)
+        val factory = NotesViewModelFactory(packageInfo)
         notesViewModel = ViewModelProvider(this, factory)[NotesEditorViewModel::class.java]
 
         return view
@@ -40,6 +39,8 @@ class Note : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         startPostponedEnterTransition()
+
+        fullVersionCheck()
 
         name.text = packageInfo.applicationInfo.name
         packageId.text = packageInfo.packageName

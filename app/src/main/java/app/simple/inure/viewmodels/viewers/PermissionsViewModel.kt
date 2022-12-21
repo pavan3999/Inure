@@ -2,18 +2,19 @@ package app.simple.inure.viewmodels.viewers
 
 import android.app.Application
 import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import app.simple.inure.R
+import app.simple.inure.apk.utils.PackageUtils.getPackageInfo
 import app.simple.inure.apk.utils.PermissionUtils.getPermissionInfo
-import app.simple.inure.constants.Misc
-import app.simple.inure.extension.viewmodels.WrappedViewModel
+import app.simple.inure.extensions.viewmodels.WrappedViewModel
 import app.simple.inure.models.PermissionInfo
 import app.simple.inure.util.StringUtils.capitalizeFirstLetter
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.dongliu.apk.parser.ApkFile
 import java.util.*
 
 class PermissionsViewModel(application: Application, val packageInfo: PackageInfo) : WrappedViewModel(application) {
@@ -24,23 +25,15 @@ class PermissionsViewModel(application: Application, val packageInfo: PackageInf
         }
     }
 
-    private val error: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
-
     fun getPermissions(): LiveData<MutableList<PermissionInfo>> {
         return permissions
-    }
-
-    fun getError(): LiveData<String> {
-        return error
     }
 
     fun loadPermissionData(keyword: String) {
         viewModelScope.launch(Dispatchers.Default) {
             kotlin.runCatching {
                 val context = context
-                val appPackageInfo = getApplication<Application>().packageManager.getPackageInfo(packageInfo.packageName, PackageManager.GET_PERMISSIONS)
+                val appPackageInfo = packageManager.getPackageInfo(packageInfo.packageName)!!
                 val permissions = arrayListOf<PermissionInfo>()
 
                 for (count in appPackageInfo.requestedPermissions.indices) {
@@ -49,23 +42,56 @@ class PermissionsViewModel(application: Application, val packageInfo: PackageInf
                     kotlin.runCatching {
                         permissionInfo.permissionInfo = appPackageInfo.requestedPermissions[count].getPermissionInfo(context)
                         permissionInfo.label = permissionInfo.permissionInfo!!.loadLabel(context.packageManager).toString().capitalizeFirstLetter()
+                        Log.d("Permission", permissionInfo.label)
 
                         if (isKeywordMatched(keyword, appPackageInfo.requestedPermissions[count], permissionInfo.label)) {
-                            permissionInfo.isGranted = appPackageInfo.requestedPermissionsFlags[count] and PackageInfo.REQUESTED_PERMISSION_GRANTED != 0
+                            if (appPackageInfo.requestedPermissionsFlags[count] and PackageInfo.REQUESTED_PERMISSION_GRANTED != 0) {
+                                permissionInfo.isGranted = 1
+                            } else {
+                                permissionInfo.isGranted = 0
+                            }
                             permissionInfo.name = appPackageInfo.requestedPermissions[count]
                             permissions.add(permissionInfo)
                         }
                     }.onFailure {
                         permissionInfo.permissionInfo = null
                         permissionInfo.label = appPackageInfo.requestedPermissions[count]
+                        Log.d("Permission", permissionInfo.label)
 
                         if (isKeywordMatched(keyword, appPackageInfo.requestedPermissions[count])) {
-                            permissionInfo.isGranted = appPackageInfo.requestedPermissionsFlags[count] and PackageInfo.REQUESTED_PERMISSION_GRANTED != 0
+                            if (appPackageInfo.requestedPermissionsFlags[count] and PackageInfo.REQUESTED_PERMISSION_GRANTED != 0) {
+                                permissionInfo.isGranted = 1
+                            } else {
+                                permissionInfo.isGranted = 0
+                            }
                             permissionInfo.name = appPackageInfo.requestedPermissions[count]
                             permissions.add(permissionInfo)
                         }
 
                         it.printStackTrace()
+                    }
+                }
+
+                val requestedPermissions = appPackageInfo.requestedPermissions.toMutableList()
+
+                ApkFile(packageInfo.applicationInfo.sourceDir).use { apkFile ->
+                    apkFile.apkMeta.permissions.forEach { permission ->
+                        if (permission.name !in requestedPermissions) {
+                            val permissionInfo = PermissionInfo()
+
+                            permissionInfo.permissionInfo = permission.name.getPermissionInfo(context)
+                            permissionInfo.label = kotlin.runCatching {
+                                permissionInfo.permissionInfo!!.loadLabel(context.packageManager).toString().capitalizeFirstLetter()
+                            }.getOrElse {
+                                permission.name
+                            }
+
+                            if (isKeywordMatched(keyword, permission.name, permissionInfo.label)) {
+                                permissionInfo.isGranted = 2
+                                permissionInfo.name = permission.name
+                                permissions.add(permissionInfo)
+                            }
+                        }
                     }
                 }
 
@@ -75,8 +101,11 @@ class PermissionsViewModel(application: Application, val packageInfo: PackageInf
                     }
                 })
             }.getOrElse {
-                delay(Misc.delay)
-                error.postValue(it.stackTraceToString())
+                if (it is java.lang.NullPointerException) {
+                    postWarning(getString(R.string.this_app_doesnt_require_any_permissions))
+                } else {
+                    postError(it)
+                }
             }
         }
     }

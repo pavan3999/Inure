@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import app.simple.inure.R
 import app.simple.inure.preferences.AppearancePreferences
+import app.simple.inure.util.ConditionUtils.invert
 import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
@@ -20,14 +21,18 @@ open class CheckBoxFrameLayout @JvmOverloads constructor(context: Context, attrs
 
         minimumWidth = resources.getDimensionPixelOffset(R.dimen.checkbox_dimensions)
         minimumHeight = resources.getDimensionPixelOffset(R.dimen.checkbox_dimensions)
+        clipToPadding = false
+        clipChildren = false
 
         backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
 
-        val shapeAppearanceModel = ShapeAppearanceModel()
-            .toBuilder()
-            .setAllCorners(CornerFamily.ROUNDED, AppearancePreferences.getCornerRadius() / 4F)
-            .build()
+        if (isInEditMode.invert()) {
+            val shapeAppearanceModel = ShapeAppearanceModel()
+                .toBuilder()
+                .setAllCorners(CornerFamily.ROUNDED, AppearancePreferences.getCornerRadius() / 4F)
+                .build()
 
-        background = MaterialShapeDrawable(shapeAppearanceModel)
+            background = MaterialShapeDrawable(shapeAppearanceModel)
+        }
     }
 }

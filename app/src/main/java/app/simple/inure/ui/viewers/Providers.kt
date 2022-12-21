@@ -12,29 +12,19 @@ import app.simple.inure.R
 import app.simple.inure.adapters.details.AdapterProviders
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.decorations.ripple.DynamicRippleImageButton
-import app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
-import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.dialogs.action.ComponentState
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.extension.popup.PopupMenuCallback
+import app.simple.inure.extensions.fragments.SearchBarScopedFragment
+import app.simple.inure.extensions.popup.PopupMenuCallback
 import app.simple.inure.factories.panels.PackageInfoFactory
 import app.simple.inure.models.ProviderInfoModel
 import app.simple.inure.popups.viewers.PopupProvidersMenu
 import app.simple.inure.preferences.ProvidersPreferences
 import app.simple.inure.ui.subviewers.ProviderInfo
-import app.simple.inure.util.FragmentHelper
-import app.simple.inure.util.ViewUtils.gone
-import app.simple.inure.util.ViewUtils.visible
 import app.simple.inure.viewmodels.viewers.ProvidersViewModel
 
-class Providers : ScopedFragment() {
+class Providers : SearchBarScopedFragment() {
 
     private lateinit var recyclerView: CustomVerticalRecyclerView
-    private lateinit var search: DynamicRippleImageButton
-    private lateinit var title: TypeFaceTextView
-    private lateinit var searchBox: TypeFaceEditTextDynamicCorner
 
     private var adapterProviders: AdapterProviders? = null
     private lateinit var providersViewModel: ProvidersViewModel
@@ -48,12 +38,11 @@ class Providers : ScopedFragment() {
         searchBox = view.findViewById(R.id.providers_search)
         title = view.findViewById(R.id.providers_title)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-        packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        providersViewModel = ViewModelProvider(this, packageInfoFactory).get(ProvidersViewModel::class.java)
+        packageInfoFactory = PackageInfoFactory(packageInfo)
+        providersViewModel = ViewModelProvider(this, packageInfoFactory)[ProvidersViewModel::class.java]
 
         startPostponedEnterTransition()
-        searchBoxState()
+        searchBoxState(animate = false, ProvidersPreferences.isSearchVisible())
 
         return view
     }
@@ -67,10 +56,7 @@ class Providers : ScopedFragment() {
 
             adapterProviders?.setOnProvidersCallbackListener(object : AdapterProviders.Companion.ProvidersCallbacks {
                 override fun onProvidersClicked(providerInfoModel: ProviderInfoModel) {
-                    clearExitTransition()
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                ProviderInfo.newInstance(providerInfoModel, packageInfo),
-                                                "provider_info")
+                    openFragmentSlide(ProviderInfo.newInstance(providerInfoModel, packageInfo), "provider_info")
                 }
 
                 override fun onProvidersLongPressed(packageId: String, packageInfo: PackageInfo, icon: View, isComponentEnabled: Boolean, position: Int) {
@@ -102,13 +88,11 @@ class Providers : ScopedFragment() {
         }
 
         providersViewModel.getError().observe(viewLifecycleOwner) {
-            val e = Error.newInstance(it)
-            e.show(childFragmentManager, "error_dialog")
-            e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                override fun onDismiss() {
-                    requireActivity().onBackPressed()
-                }
-            })
+            showError(it)
+        }
+
+        providersViewModel.notFound.observe(viewLifecycleOwner) {
+            showWarning(R.string.no_providers_found)
         }
 
         search.setOnClickListener {
@@ -120,24 +104,10 @@ class Providers : ScopedFragment() {
         }
     }
 
-    private fun searchBoxState() {
-        if (ProvidersPreferences.isSearchVisible()) {
-            search.setImageResource(R.drawable.ic_close)
-            title.gone()
-            searchBox.visible(true)
-            searchBox.showInput()
-        } else {
-            search.setImageResource(R.drawable.ic_search)
-            title.visible(true)
-            searchBox.gone()
-            searchBox.hideInput()
-        }
-    }
-
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             ProvidersPreferences.providersSearch -> {
-                searchBoxState()
+                searchBoxState(animate = true, ProvidersPreferences.isSearchVisible())
             }
         }
     }

@@ -13,24 +13,15 @@ import app.simple.inure.adapters.details.AdapterResources
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
-import app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
-import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.SearchBarScopedFragment
 import app.simple.inure.factories.panels.PackageInfoFactory
 import app.simple.inure.preferences.DevelopmentPreferences
 import app.simple.inure.preferences.ResourcesPreferences
-import app.simple.inure.util.FragmentHelper
-import app.simple.inure.util.ViewUtils.gone
-import app.simple.inure.util.ViewUtils.visible
 import app.simple.inure.viewmodels.viewers.ApkDataViewModel
 
-class Resources : ScopedFragment() {
+class Resources : SearchBarScopedFragment() {
 
     private lateinit var options: DynamicRippleImageButton
-    private lateinit var search: DynamicRippleImageButton
-    private lateinit var title: TypeFaceTextView
-    private lateinit var searchBox: TypeFaceEditTextDynamicCorner
     private lateinit var recyclerView: CustomVerticalRecyclerView
     private lateinit var componentsViewModel: ApkDataViewModel
     private lateinit var packageInfoFactory: PackageInfoFactory
@@ -43,11 +34,11 @@ class Resources : ScopedFragment() {
         searchBox = view.findViewById(R.id.resources_search)
         title = view.findViewById(R.id.resources_title)
         recyclerView = view.findViewById(R.id.resources_recycler_view)
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-        packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
+
+        packageInfoFactory = PackageInfoFactory(packageInfo)
         componentsViewModel = ViewModelProvider(this, packageInfoFactory)[ApkDataViewModel::class.java]
 
-        searchBoxState()
+        searchBoxState(animate = false, ResourcesPreferences.isSearchVisible())
         startPostponedEnterTransition()
 
         return view
@@ -63,25 +54,15 @@ class Resources : ScopedFragment() {
 
             adapterResources.setOnResourceClickListener(object : AdapterResources.ResourceCallbacks {
                 override fun onResourceClicked(path: String) {
-                    clearExitTransition()
-
-                    if (DevelopmentPreferences.isWebViewXmlViewer()) {
-                        FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                    XMLViewerWebView.newInstance(packageInfo, false, path),
-                                                    "wv_xml")
+                    if (DevelopmentPreferences.get(DevelopmentPreferences.isWebViewXmlViewer)) {
+                        openFragmentSlide(XMLViewerWebView.newInstance(packageInfo, false, path), "wv_xml")
                     } else {
-                        FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                    XMLViewerTextView.newInstance(packageInfo, false, path),
-                                                    "tv_xml")
+                        openFragmentSlide(XMLViewerTextView.newInstance(packageInfo, false, path), "tv_xml")
                     }
                 }
 
                 override fun onResourceLongClicked(path: String) {
-                    clearExitTransition()
-
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                Text.newInstance(packageInfo, path),
-                                                "txt_tv_xml")
+                    openFragmentSlide(Text.newInstance(packageInfo, path), "txt_tv_xml")
                 }
             })
 
@@ -93,13 +74,11 @@ class Resources : ScopedFragment() {
         }
 
         componentsViewModel.getError().observe(viewLifecycleOwner) {
-            val e = Error.newInstance(it)
-            e.show(childFragmentManager, "error_dialog")
-            e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                override fun onDismiss() {
-                    requireActivity().onBackPressed()
-                }
-            })
+            showError(it)
+        }
+
+        componentsViewModel.notFound.observe(viewLifecycleOwner) {
+            showWarning(R.string.no_resource_found)
         }
 
         options.setOnClickListener {
@@ -115,24 +94,10 @@ class Resources : ScopedFragment() {
         }
     }
 
-    private fun searchBoxState() {
-        if (ResourcesPreferences.isSearchVisible()) {
-            search.setImageResource(R.drawable.ic_close)
-            title.gone()
-            searchBox.visible(true)
-            searchBox.showInput()
-        } else {
-            search.setImageResource(R.drawable.ic_search)
-            title.visible(true)
-            searchBox.gone()
-            searchBox.hideInput()
-        }
-    }
-
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             ResourcesPreferences.resourcesSearch -> {
-                searchBoxState()
+                searchBoxState(animate = true, ResourcesPreferences.isSearchVisible())
             }
         }
     }

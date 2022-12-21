@@ -1,17 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="app.simple.inure"
     android:installLocation="auto">
 
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="com.termux.permission.RUN_COMMAND" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+
+    <uses-permission
+        android:name="android.permission.GET_APP_OPS_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.CLEAR_APP_CACHE"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.DELETE_CACHE_FILES"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
@@ -39,36 +56,68 @@
         android:label="@string/perm_prepend_to_path"
         android:protectionLevel="dangerous" />
 
+    <uses-feature
+        android:name="android.software.device_admin"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
+        android:manageSpaceActivity=".activities.app.ManageSpace"
+        android:requestLegacyExternalStorage="true"
+        android:resizeableActivity="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Inure"
         android:windowSoftInputMode="adjustPan"
-        tools:ignore="AllowBackup">
+        tools:ignore="AllowBackup"
+        tools:targetApi="tiramisu">
+
+        <profileable android:shell="true" />
 
         <activity
             android:name=".activities.app.MainActivity"
             android:configChanges="uiMode"
-            android:documentLaunchMode="intoExisting"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="app.simple.inureunlocker.action.UNLOCK" />
+            </intent-filter>
         </activity>
+
+        <activity
+            android:name=".activities.app.CrashReporterActivity"
+            android:configChanges="uiMode"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".terminal.Term"
             android:configChanges="keyboard|keyboardHidden|orientation"
             android:exported="true"
             android:label="@string/terminal"
+            android:launchMode="singleTask"
+            android:taskAffinity="app.simple.inure"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".terminal.TermAffinity"
+            android:configChanges="keyboard|keyboardHidden|orientation"
+            android:exported="true"
+            android:label="@string/terminal"
+            android:launchMode="singleTask"
+            android:taskAffinity="app.simple.inure.terminal.TermAffinity"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!--suppress DeprecatedClassUsageInspection -->
         <activity
             android:name=".activities.launcher.TerminalLauncher"
             android:configChanges="keyboard|keyboardHidden|orientation"
@@ -80,20 +129,42 @@
         <activity
             android:name=".activities.preferences.PreferenceActivity"
             android:configChanges="uiMode"
-            android:documentLaunchMode="intoExisting"
             android:exported="false"
+            android:label="@string/preferences"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".activities.app.ManageSpace"
+            android:configChanges="uiMode"
+            android:exported="false"
+            android:label="@string/manage_space"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".terminal.WindowList"
-            android:documentLaunchMode="intoExisting"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".activities.association.AppDetailsActivity"
+            android:enabled="false"
             android:exported="true"
             android:label="@string/app_info">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="application/vnd.android.package-archive" />
+                <data android:mimeType="application/vnd.apkm" />
+                <data android:mimeType="application/xapk-package-archive" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -118,21 +189,49 @@
                 <data android:scheme="content" />
                 <data android:host="*" />
                 <data android:mimeType="*/*" />
-                <data android:pathPattern=".*\\.apk" />
-                <data android:pathPattern=".*\\..*\\.apk" />
-                <data android:pathPattern=".*\\..*\\..*\\.apk" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.apk" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.apk" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.apk" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.apk" />
+                <data android:pathPattern=".*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\.apks" />
+                <data android:pathPattern=".*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\.xapk" />
+                <data android:pathPattern=".*\\..*\\.xapk" />
+                <data android:pathPattern=".*\\..*\\..*\\.xapk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.xapk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.xapk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.xapk" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.xapk" />
             </intent-filter>
         </activity>
 
         <activity
             android:name=".activities.association.ApkInstallerActivity"
-            android:enabled="false"
+            android:autoRemoveFromRecents="true"
+            android:configChanges="uiMode"
+            android:documentLaunchMode="always"
             android:exported="true"
-            android:label="Package Installer">
+            android:label="Package Installer"
+            android:theme="@style/Inure.Transparent"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="application/vnd.android.package-archive" />
+                <data android:mimeType="application/vnd.apkm" />
+                <data android:mimeType="application/xapk-package-archive" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -147,13 +246,67 @@
                 <data android:mimeType="application/xapk-package-archive" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.INSTALL_PACKAGE" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="application/vnd.android.package-archive" />
+                <data android:mimeType="application/vnd.apkm" />
+                <data android:mimeType="application/xapk-package-archive" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.apkm" />
+                <data android:pathPattern=".*\\.apks" />
+                <data android:pathPattern=".*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.apks" />
+                <data android:pathPattern=".*\\.zip" />
+                <data android:pathPattern=".*\\..*\\.zip" />
+                <data android:pathPattern=".*\\..*\\..*\\.zip" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.zip" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.zip" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.zip" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.zip" />
+                <!--                <data android:pathPattern=".*\\.xapk" />-->
+                <!--                <data android:pathPattern=".*\\..*\\.xapk" />-->
+                <!--                <data android:pathPattern=".*\\..*\\..*\\.xapk" />-->
+                <!--                <data android:pathPattern=".*\\..*\\..*\\..*\\.xapk" />-->
+                <!--                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.xapk" />-->
+                <!--                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.xapk" />-->
+                <!--                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.xapk" />-->
+            </intent-filter>
         </activity>
 
         <activity
             android:name=".activities.association.ImageActivity"
             android:autoRemoveFromRecents="true"
             android:clearTaskOnLaunch="true"
-            android:documentLaunchMode="intoExisting"
+            android:documentLaunchMode="always"
             android:exported="true"
             android:label="@string/image_viewer">
             <intent-filter>
@@ -170,13 +323,17 @@
         </activity>
 
         <activity
-            android:name=".activities.launcher.AudioLauncherActivity"
+            android:name=".activities.association.AudioPlayerActivity"
             android:autoRemoveFromRecents="true"
-            android:configChanges="uiMode|orientation|screenSize"
+            android:configChanges="uiMode"
             android:documentLaunchMode="intoExisting"
             android:exported="true"
-            android:label="@string/audio_player"
-            android:theme="@style/Inure.Transparent">
+            android:icon="@mipmap/ic_audio_player"
+            android:label="Inure Mini Player"
+            android:roundIcon="@mipmap/ic_audio_player_round"
+            android:theme="@style/Inure.Transparent"
+            android:windowSoftInputMode="adjustResize">
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -188,30 +345,47 @@
                 <data android:host="*" />
                 <data android:mimeType="audio/*" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="audio/*" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="audio/*" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:scheme="ftp" />
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="application/ogg" />
+                <data android:mimeType="application/x-ogg" />
+                <data android:mimeType="application/itunes" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
         </activity>
-
-        <activity
-            android:name=".activities.association.AudioPlayerActivity"
-            android:autoRemoveFromRecents="true"
-            android:configChanges="uiMode"
-            android:documentLaunchMode="intoExisting"
-            android:exported="false"
-            android:theme="@style/Inure.Transparent"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
-            android:name=".activities.association.FullScreenAudioPlayerActivity"
-            android:autoRemoveFromRecents="true"
-            android:configChanges="uiMode"
-            android:documentLaunchMode="intoExisting"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".activities.association.TextViewerActivity"
             android:autoRemoveFromRecents="true"
             android:clearTaskOnLaunch="true"
-            android:documentLaunchMode="intoExisting"
+            android:documentLaunchMode="always"
             android:exported="true"
             android:label="@string/text_viewer">
             <intent-filter>
@@ -238,7 +412,7 @@
             android:name=".activities.association.TTFViewerActivity"
             android:autoRemoveFromRecents="true"
             android:clearTaskOnLaunch="true"
-            android:documentLaunchMode="intoExisting"
+            android:documentLaunchMode="always"
             android:exported="true"
             android:label="@string/ttf_viewer">
             <intent-filter>
@@ -262,8 +436,10 @@
             android:exported="true"
             android:icon="@mipmap/ic_terminal"
             android:label="@string/terminal"
+            android:launchMode="singleTask"
             android:roundIcon="@mipmap/ic_terminal_round"
-            android:targetActivity=".terminal.Term">
+            android:targetActivity=".terminal.TermAffinity"
+            android:taskAffinity="app.simple.inure.terminal.TermAffinity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -401,16 +577,81 @@
             android:foregroundServiceType="mediaPlayback" />
 
         <service
-            android:name=".services.BatchCopyService"
+            android:name=".services.BatchExtractService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".services.BatchUninstallerService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".services.InstallerService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service
+            android:name=".services.RootService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service
+            android:name=".services.InstallerSessionService"
+            android:enabled="true"
+            android:exported="false" />
 
         <receiver
             android:name="app.simple.inure.receivers.MediaButtonIntentReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="app.simple.inure.widgets.LockScreenWidget"
+            android:description="@string/lock_screen_desc"
+            android:exported="false"
+            android:icon="@mipmap/ic_lock_screen"
+            android:label="@string/lock_screen"
+            android:roundIcon="@mipmap/ic_lock_screen_round">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_lock_provider" />
+        </receiver>
+
+        <receiver
+            android:name=".receivers.AppUninstalledBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <action android:name="app.simple.inure.action.APP_UNINSTALLED" />
+
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="app.simple.inure.receivers.AdminReceiver"
+            android:description="@string/device_admin_desc"
+            android:exported="false"
+            android:label="@string/app_name_full"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_props" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.ACTION_DEVICE_ADMIN_DISABLE_REQUESTED" />
+                <action android:name="android.app.action.ACTION_DEVICE_ADMIN_DISABLED" />
             </intent-filter>
         </receiver>
 

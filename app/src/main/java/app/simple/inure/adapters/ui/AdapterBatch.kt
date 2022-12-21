@@ -1,42 +1,42 @@
 package app.simple.inure.adapters.ui
 
 import android.annotation.SuppressLint
-import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import app.simple.inure.R
-import app.simple.inure.decorations.checkbox.CheckBox
-import app.simple.inure.decorations.overscroll.RecyclerViewConstants
+import app.simple.inure.decorations.checkbox.InureCheckBox
 import app.simple.inure.decorations.overscroll.VerticalListViewHolder
 import app.simple.inure.decorations.ripple.DynamicRippleConstraintLayout
-import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.glide.modules.GlideApp
 import app.simple.inure.glide.util.ImageLoader.loadAppIcon
-import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
+import app.simple.inure.interfaces.adapters.AdapterCallbacks
 import app.simple.inure.models.BatchPackageInfo
+import app.simple.inure.popups.apps.PopupAppsCategory
 import app.simple.inure.preferences.BatchPreferences
 import app.simple.inure.preferences.FormattingPreferences
 import app.simple.inure.util.ArrayUtils.move
 import app.simple.inure.util.DateUtils
+import app.simple.inure.util.RecyclerViewUtils
+import app.simple.inure.util.Sort
 import java.util.stream.Collectors
 
 class AdapterBatch(var apps: ArrayList<BatchPackageInfo>, var headerEnabled: Boolean = true) : RecyclerView.Adapter<VerticalListViewHolder>() {
 
-    private var appsAdapterCallbacks: AppsAdapterCallbacks? = null
+    private var adapterCallbacks: AdapterCallbacks? = null
     private val pattern = FormattingPreferences.getDateFormat()
     private var highlight = BatchPreferences.isSelectedBatchHighlighted()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VerticalListViewHolder {
         return when (viewType) {
-            RecyclerViewConstants.TYPE_HEADER -> {
+            RecyclerViewUtils.TYPE_HEADER -> {
                 Header(LayoutInflater.from(parent.context)
                            .inflate(R.layout.adapter_header_batch, parent, false))
             }
-            RecyclerViewConstants.TYPE_ITEM -> {
+            RecyclerViewUtils.TYPE_ITEM -> {
                 Holder(LayoutInflater.from(parent.context)
                            .inflate(R.layout.adapter_batch, parent, false))
             }
@@ -52,16 +52,11 @@ class AdapterBatch(var apps: ArrayList<BatchPackageInfo>, var headerEnabled: Boo
 
         if (holder is Holder) {
             holder.icon.transitionName = "app_$position"
-            holder.icon.loadAppIcon(apps[position].packageInfo.packageName)
+            holder.icon.loadAppIcon(apps[position].packageInfo.packageName, apps[position].packageInfo.applicationInfo.enabled)
             holder.name.text = apps[position].packageInfo.applicationInfo.name
             holder.packageId.text = apps[position].packageInfo.packageName
 
-            if (apps[position].packageInfo.applicationInfo.enabled) {
-                holder.name.paintFlags = holder.name.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-            } else {
-                holder.name.paintFlags = holder.name.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-            }
-
+            holder.name.setStrikeThru(apps[position].packageInfo.applicationInfo.enabled)
             holder.checkBox.setCheckedWithoutAnimations(apps[position].isSelected)
 
             if (highlight) {
@@ -73,7 +68,7 @@ class AdapterBatch(var apps: ArrayList<BatchPackageInfo>, var headerEnabled: Boo
             holder.checkBox.setOnCheckedChangeListener {
                 apps[position].isSelected = it
                 apps[position].dateSelected = if (it) System.currentTimeMillis() else -1
-                appsAdapterCallbacks?.onBatchChanged(apps[position])
+                adapterCallbacks?.onBatchChanged(apps[position])
 
                 if (highlight) {
                     holder.container.setDefaultBackground(apps[position].isSelected)
@@ -86,8 +81,13 @@ class AdapterBatch(var apps: ArrayList<BatchPackageInfo>, var headerEnabled: Boo
                 }
 
                 if (BatchPreferences.isSelectionOnTop() && it) {
-                    apps.move(position, 0)
-                    notifyItemMoved(position_, 1)
+                    if (headerEnabled) {
+                        apps.move(holder.bindingAdapterPosition.minus(1), 0)
+                        notifyItemMoved(holder.bindingAdapterPosition, 1)
+                    } else {
+                        apps.move(holder.bindingAdapterPosition, 0)
+                        notifyItemMoved(holder.bindingAdapterPosition, 0)
+                    }
                 }
             }
 
@@ -98,34 +98,55 @@ class AdapterBatch(var apps: ArrayList<BatchPackageInfo>, var headerEnabled: Boo
             }
 
             holder.container.setOnClickListener {
-                holder.checkBox.invertCheckedStatus()
+                holder.checkBox.toggle()
                 // appsAdapterCallbacks?.onAppClicked(apps[position].packageInfo, holder.icon)
             }
 
             holder.container.setOnLongClickListener {
-                appsAdapterCallbacks?.onAppLongPressed(apps[position].packageInfo, holder.icon)
+                adapterCallbacks?.onAppLongPressed(apps[position].packageInfo, holder.icon)
                 true
             }
         }
 
         if (holder is Header) {
-            holder.search.setOnClickListener {
-                appsAdapterCallbacks?.onSearchPressed(it)
-            }
-
-            holder.filter.setOnClickListener {
-                appsAdapterCallbacks?.onFilterPressed(it)
-            }
-
-            holder.sort.setOnClickListener {
-                appsAdapterCallbacks?.onSortPressed(it)
-            }
-
-            holder.settings.setOnClickListener {
-                appsAdapterCallbacks?.onSettingsPressed(it)
-            }
-
             holder.total.text = String.format(holder.itemView.context.getString(R.string.total_apps), apps.size)
+
+            holder.category.text = when (BatchPreferences.getAppsCategory()) {
+                PopupAppsCategory.USER -> {
+                    holder.getString(R.string.user)
+                }
+                PopupAppsCategory.SYSTEM -> {
+                    holder.getString(R.string.system)
+                }
+                PopupAppsCategory.BOTH -> {
+                    with(StringBuilder()) {
+                        append(holder.getString(R.string.user))
+                        append(" | ")
+                        append(holder.getString(R.string.system))
+                    }
+                }
+                else -> {
+                    holder.getString(R.string.unknown)
+                }
+            }
+
+            holder.sorting.text = when (BatchPreferences.getSortStyle()) {
+                Sort.NAME -> {
+                    holder.getString(R.string.name)
+                }
+                Sort.PACKAGE_NAME -> {
+                    holder.getString(R.string.package_name)
+                }
+                Sort.INSTALL_DATE -> {
+                    holder.getString(R.string.install_date)
+                }
+                Sort.SIZE -> {
+                    holder.getString(R.string.app_size)
+                }
+                else -> {
+                    holder.getString(R.string.unknown)
+                }
+            }
         }
     }
 
@@ -147,21 +168,22 @@ class AdapterBatch(var apps: ArrayList<BatchPackageInfo>, var headerEnabled: Boo
     override fun getItemViewType(position: Int): Int {
         return if (headerEnabled) {
             if (position == 0) {
-                RecyclerViewConstants.TYPE_HEADER
-            } else RecyclerViewConstants.TYPE_ITEM
+                RecyclerViewUtils.TYPE_HEADER
+            } else RecyclerViewUtils.TYPE_ITEM
         } else {
-            RecyclerViewConstants.TYPE_ITEM
+            RecyclerViewUtils.TYPE_ITEM
         }
     }
 
-    fun setOnItemClickListener(appsAdapterCallbacks: AppsAdapterCallbacks) {
-        this.appsAdapterCallbacks = appsAdapterCallbacks
+    fun setOnItemClickListener(adapterCallbacks: AdapterCallbacks) {
+        this.adapterCallbacks = adapterCallbacks
     }
 
     fun getCurrentAppsList(): ArrayList<BatchPackageInfo> {
         return apps.stream().filter { it.isSelected }.collect(Collectors.toList()) as ArrayList<BatchPackageInfo>
     }
 
+    @Suppress("unused")
     fun updateBatchItem(batchPackageInfo: BatchPackageInfo) {
         for (i in apps.indices) {
             if (apps[i].packageInfo.packageName == batchPackageInfo.packageInfo.packageName) {
@@ -195,20 +217,27 @@ class AdapterBatch(var apps: ArrayList<BatchPackageInfo>, var headerEnabled: Boo
         }
     }
 
+    @Suppress("unused")
+    fun updateList(it: java.util.ArrayList<BatchPackageInfo>) {
+        val oldSize: Int = apps.size
+        apps.clear()
+        notifyItemRangeRemoved(1, oldSize.plus(1))
+        apps.addAll(it)
+        notifyItemRangeInserted(1, it.size.plus(1))
+    }
+
     inner class Holder(itemView: View) : VerticalListViewHolder(itemView) {
         val icon: ImageView = itemView.findViewById(R.id.adapter_batch_app_icon)
         val name: TypeFaceTextView = itemView.findViewById(R.id.adapter_batch_app_name)
         val packageId: TypeFaceTextView = itemView.findViewById(R.id.adapter_batch_app_package_id)
         val date: TypeFaceTextView = itemView.findViewById(R.id.adapter_batch_date)
-        val checkBox: CheckBox = itemView.findViewById(R.id.checkBox)
+        val checkBox: InureCheckBox = itemView.findViewById(R.id.checkBox)
         val container: DynamicRippleConstraintLayout = itemView.findViewById(R.id.adapter_batch_app_container)
     }
 
     inner class Header(itemView: View) : VerticalListViewHolder(itemView) {
         val total: TypeFaceTextView = itemView.findViewById(R.id.adapter_total_apps)
-        val sort: DynamicRippleImageButton = itemView.findViewById(R.id.adapter_header_sort_button)
-        val filter: DynamicRippleImageButton = itemView.findViewById(R.id.adapter_header_filter_button)
-        val search: DynamicRippleImageButton = itemView.findViewById(R.id.adapter_header_search_button)
-        val settings: DynamicRippleImageButton = itemView.findViewById(R.id.adapter_header_configuration_button)
+        val sorting: TypeFaceTextView = itemView.findViewById(R.id.adapter_header_sorting)
+        val category: TypeFaceTextView = itemView.findViewById(R.id.adapter_header_category)
     }
 }

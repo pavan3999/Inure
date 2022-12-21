@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.adapters.details.AdapterDexData
+import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.panels.PackageInfoFactory
 import app.simple.inure.viewmodels.viewers.DexDataViewModel
 
@@ -25,9 +25,8 @@ class Dexs : ScopedFragment() {
 
         recyclerView = view.findViewById(R.id.dexs_recycler_view)
 
-        packageInfo = requireArguments().getParcelable("application_info")!!
-        packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        dexDataViewModel = ViewModelProvider(this, packageInfoFactory).get(DexDataViewModel::class.java)
+        packageInfoFactory = PackageInfoFactory(packageInfo)
+        dexDataViewModel = ViewModelProvider(this, packageInfoFactory)[DexDataViewModel::class.java]
 
         startPostponedEnterTransition()
 
@@ -37,26 +36,20 @@ class Dexs : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        dexDataViewModel.getDexClasses().observe(viewLifecycleOwner, {
+        dexDataViewModel.getDexClasses().observe(viewLifecycleOwner) {
             val adapter = AdapterDexData(it)
             recyclerView.adapter = adapter
-        })
+        }
 
-        dexDataViewModel.getError().observe(viewLifecycleOwner, {
-            val e = Error.newInstance(it)
-            e.show(childFragmentManager, "error_dialog")
-            e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                override fun onDismiss() {
-                    requireActivity().onBackPressed()
-                }
-            })
-        })
+        dexDataViewModel.getError().observe(viewLifecycleOwner) {
+            showError(it)
+        }
     }
 
     companion object {
-        fun newInstance(applicationInfo: PackageInfo): Dexs {
+        fun newInstance(packageInfo: PackageInfo): Dexs {
             val args = Bundle()
-            args.putParcelable("application_info", applicationInfo)
+            args.putParcelable(BundleConstants.packageInfo, packageInfo)
             val fragment = Dexs()
             fragment.arguments = args
             return fragment

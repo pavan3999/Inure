@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<app.simple.inure.decorations.theme.ThemeLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/white"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:background="@android:color/white"
     android:orientation="vertical"
     android:paddingHorizontal="@dimen/panel_padding_horizontal">
 
@@ -17,18 +17,19 @@
         android:background="@android:color/white"
         android:clipChildren="false"
         android:clipToPadding="false"
-        android:translationZ="1dp"
         android:orientation="horizontal"
-        android:padding="@dimen/header_padding">
+        android:padding="@dimen/popup_padding"
+        android:translationZ="1dp">
 
-        <ImageView
+        <app.simple.inure.decorations.theme.ThemeIcon
             android:id="@+id/preferences_header_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_gravity="center_vertical"
-            android:padding="10dp"
-            android:src="@drawable/ic_app_icon_settings"
-            android:transitionName="main_app_icon"
+            android:padding="5dp"
+            app:srcCompat="@drawable/ic_app_icon_settings"
+            android:transitionName="@string/preferences"
+            app:tintType="accent"
             tools:ignore="ContentDescription" />
 
         <app.simple.inure.decorations.typeface.TypeFaceTextView
@@ -38,11 +39,23 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="@dimen/popup_padding"
             android:layout_weight="1"
+            android:ellipsize="marquee"
             android:gravity="center_vertical"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:text="@string/preferences"
             android:textSize="@dimen/header_font_size"
             app:appFontStyle="bold"
             app:textColorStyle="heading" />
+
+        <app.simple.inure.decorations.ripple.DynamicRippleImageButton
+            android:id="@+id/preferences_memory_btn"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/popup_padding"
+            app:srcCompat="@drawable/ic_memory"
+            app:buttonTintType="accent" />
 
         <app.simple.inure.decorations.ripple.DynamicRippleImageButton
             android:id="@+id/preferences_search_btn"
@@ -53,18 +66,17 @@
             android:src="@drawable/ic_search"
             app:buttonTintType="accent" />
 
-        <app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+        <app.simple.inure.decorations.corners.DynamicCornerEditText
             android:id="@+id/preferences_search"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="5dp"
+            android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:elevation="@dimen/dialog_elevation"
             android:maxHeight="50dp"
             android:maxLines="1"
             android:paddingHorizontal="@dimen/header_padding"
-            android:textCursorDrawable="@drawable/text_cursor"
             android:visibility="gone"
             app:appFontStyle="regular"
             app:textColorStyle="secondary" />
@@ -83,4 +95,4 @@
         app:isFastScrollRequired="false"
         app:statusBarPaddingRequired="false" />
 
-</LinearLayout>
+</app.simple.inure.decorations.theme.ThemeLinearLayout>

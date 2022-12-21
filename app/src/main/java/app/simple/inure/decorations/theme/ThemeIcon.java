@@ -2,21 +2,26 @@ package app.simple.inure.decorations.theme;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.view.animation.DecelerateInterpolator;
+
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.interpolator.view.animation.LinearOutSlowInInterpolator;
 import app.simple.inure.R;
+import app.simple.inure.loaders.ImageLoader;
+import app.simple.inure.preferences.AccessibilityPreferences;
+import app.simple.inure.preferences.AppearancePreferences;
 import app.simple.inure.themes.interfaces.ThemeChangedListener;
 import app.simple.inure.themes.manager.Theme;
 import app.simple.inure.themes.manager.ThemeManager;
-import app.simple.inure.util.ColorUtils;
 
-public class ThemeIcon extends AppCompatImageView implements ThemeChangedListener {
+public class ThemeIcon extends AppCompatImageView implements ThemeChangedListener, SharedPreferences.OnSharedPreferenceChangeListener {
     
     private ValueAnimator valueAnimator;
     private int tintMode;
@@ -32,6 +37,9 @@ public class ThemeIcon extends AppCompatImageView implements ThemeChangedListene
     }
     
     private void init(AttributeSet attrs) {
+        if (isInEditMode()) {
+            return;
+        }
         TypedArray typedArray = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.ThemeIcon, 0, 0);
         tintMode = typedArray.getInteger(R.styleable.ThemeIcon_tintType, 0);
         setTintColor(tintMode, false);
@@ -41,7 +49,7 @@ public class ThemeIcon extends AppCompatImageView implements ThemeChangedListene
         if (animate) {
             valueAnimator = ValueAnimator.ofArgb(getImageTintList().getDefaultColor(), endColor);
             valueAnimator.setDuration(getResources().getInteger(R.integer.theme_change_duration));
-            valueAnimator.setInterpolator(new DecelerateInterpolator(1.5F));
+            valueAnimator.setInterpolator(new LinearOutSlowInInterpolator());
             valueAnimator.addUpdateListener(animation -> setImageTintList(ColorStateList.valueOf((int) animation.getAnimatedValue())));
             valueAnimator.start();
         } else {
@@ -60,7 +68,7 @@ public class ThemeIcon extends AppCompatImageView implements ThemeChangedListene
                 break;
             }
             case 2: {
-                setTint(ColorUtils.INSTANCE.resolveAttrColor(getContext(), R.attr.colorAppAccent), animate);
+                setTint(AppearancePreferences.INSTANCE.getAccentColor(), animate);
                 break;
             }
             case 3: {
@@ -69,9 +77,21 @@ public class ThemeIcon extends AppCompatImageView implements ThemeChangedListene
         }
     }
     
+    public void setIcon(int resId, boolean animate) {
+        if (animate && !AccessibilityPreferences.INSTANCE.isAnimationReduced()) {
+            ImageLoader.INSTANCE.loadImage(resId, this, 0);
+        } else {
+            setImageResource(resId);
+        }
+    }
+    
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        if (isInEditMode()) {
+            return;
+        }
+        app.simple.inure.preferences.SharedPreferences.INSTANCE.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
         ThemeManager.INSTANCE.addListener(this);
     }
     
@@ -83,9 +103,17 @@ public class ThemeIcon extends AppCompatImageView implements ThemeChangedListene
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        app.simple.inure.preferences.SharedPreferences.INSTANCE.getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
         ThemeManager.INSTANCE.removeListener(this);
         if (valueAnimator != null) {
             valueAnimator.cancel();
+        }
+    }
+    
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (Objects.equals(key, AppearancePreferences.accentColor)) {
+            setTintColor(tintMode, true);
         }
     }
 }

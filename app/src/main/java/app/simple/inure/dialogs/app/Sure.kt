@@ -4,9 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentManager
 import app.simple.inure.R
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
+import app.simple.inure.interfaces.fragments.SureCallbacks
 
 class Sure : ScopedBottomSheetFragment() {
 
@@ -33,7 +35,9 @@ class Sure : ScopedBottomSheetFragment() {
         }
 
         cancel.setOnClickListener {
-            dismiss()
+            sureCallbacks?.onCancel().also {
+                dismiss()
+            }
         }
     }
 
@@ -49,8 +53,12 @@ class Sure : ScopedBottomSheetFragment() {
             return fragment
         }
 
-        interface SureCallbacks {
-            fun onSure()
+        fun FragmentManager.newSureInstance(): Sure {
+            val args = Bundle()
+            val fragment = Sure()
+            fragment.arguments = args
+            fragment.show(this, "sure")
+            return fragment
         }
     }
 }

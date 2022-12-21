@@ -18,14 +18,9 @@
 
     <app.simple.inure.decorations.theme.ThemeCoordinatorLayout
         android:id="@+id/app_container"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
-    <ImageView
-        android:id="@+id/theme_reveal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="invisible"
-        tools:ignore="ContentDescription" />
 
 </merge>

@@ -2,32 +2,39 @@ package app.simple.inure.decorations.theme;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.util.AttributeSet;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.widget.NestedScrollView;
+import app.simple.inure.decorations.edgeeffect.EdgeEffectNestedScrollView;
 import app.simple.inure.themes.interfaces.ThemeChangedListener;
 import app.simple.inure.themes.manager.Theme;
 import app.simple.inure.themes.manager.ThemeManager;
 
-public class ThemeNestedScrollView extends NestedScrollView implements ThemeChangedListener {
+public class ThemeNestedScrollView extends EdgeEffectNestedScrollView implements ThemeChangedListener, SharedPreferences.OnSharedPreferenceChangeListener {
     
     private ValueAnimator valueAnimator;
     
     public ThemeNestedScrollView(@NonNull Context context) {
         super(context);
-        setBackground(false);
+        init();
     }
     
     public ThemeNestedScrollView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        setBackground(false);
+        init();
     }
     
     public ThemeNestedScrollView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init();
+    }
+    
+    private void init() {
+        setBackgroundColor(Color.WHITE);
         setBackground(false);
     }
     
@@ -58,5 +65,10 @@ public class ThemeNestedScrollView extends NestedScrollView implements ThemeChan
         if (valueAnimator != null) {
             valueAnimator.cancel();
         }
+    }
+    
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    
     }
 }

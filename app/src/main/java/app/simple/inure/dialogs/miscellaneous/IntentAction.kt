@@ -11,10 +11,10 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
-import app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+import app.simple.inure.decorations.corners.DynamicCornerEditText
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.CustomProgressBar
-import app.simple.inure.extension.fragments.ScopedDialogFragment
+import app.simple.inure.extensions.fragments.ScopedDialogFragment
 import app.simple.inure.factories.actions.ActivityLaunchFactory
 import app.simple.inure.util.ConditionUtils.isZero
 import app.simple.inure.util.ViewUtils.invisible
@@ -24,7 +24,7 @@ import app.simple.inure.viewmodels.dialogs.ActivityLauncherViewModel
 class IntentAction : ScopedDialogFragment() {
 
     private lateinit var command: TypeFaceTextView
-    private lateinit var action: TypeFaceEditTextDynamicCorner
+    private lateinit var action: DynamicCornerEditText
     private lateinit var launch: TypeFaceTextView
     private lateinit var loader: CustomProgressBar
 
@@ -41,11 +41,10 @@ class IntentAction : ScopedDialogFragment() {
         launch = view.findViewById(R.id.launch_intent_action)
         loader = view.findViewById(R.id.loader)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
         packageId = requireArguments().getString(BundleConstants.packageId)!!
 
-        activityLaunchFactory = ActivityLaunchFactory(requireActivity().application, packageInfo, packageId!!)
-        activityLauncherViewModel = ViewModelProvider(this, activityLaunchFactory).get(ActivityLauncherViewModel::class.java)
+        activityLaunchFactory = ActivityLaunchFactory(packageInfo, packageId!!)
+        activityLauncherViewModel = ViewModelProvider(this, activityLaunchFactory)[ActivityLauncherViewModel::class.java]
 
         return view
     }
@@ -82,13 +81,13 @@ class IntentAction : ScopedDialogFragment() {
             activityLauncherViewModel.runActionCommand(action.text.toString())
         }
 
-        activityLauncherViewModel.getActionStatus().observe(viewLifecycleOwner, {
+        activityLauncherViewModel.getActionStatus().observe(viewLifecycleOwner) {
             when (it) {
                 "Done", "Failed" -> {
                     loader.invisible(true)
                 }
             }
-        })
+        }
     }
 
     companion object {

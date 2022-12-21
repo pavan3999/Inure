@@ -1,12 +1,12 @@
 package app.simple.inure.ui.launcher
 
-import android.app.Activity
-import android.app.AppOpsManager
-import android.content.Context
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Process
+import android.os.Environment
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
@@ -14,22 +14,20 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.AppOpsManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import app.simple.inure.BuildConfig
 import app.simple.inure.R
+import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.ripple.DynamicRippleLinearLayout
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
 import app.simple.inure.decorations.switchview.SwitchView
 import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.preferences.ConfigurationPreferences
-import app.simple.inure.preferences.MainPreferences
 import app.simple.inure.ui.preferences.subscreens.AccentColor
 import app.simple.inure.ui.preferences.subscreens.AppearanceTypeFace
-import app.simple.inure.util.ColorUtils.resolveAttrColor
-import app.simple.inure.util.FragmentHelper
-import app.simple.inure.util.NullSafety.isNull
-import app.simple.inure.util.PermissionUtils.arePermissionsGranted
+import app.simple.inure.util.PermissionUtils.checkForUsageAccessPermission
 import app.simple.inure.util.ViewUtils.gone
 import app.simple.inure.util.ViewUtils.invisible
 import app.simple.inure.util.ViewUtils.visible
@@ -51,12 +49,7 @@ class Setup : ScopedFragment() {
     private lateinit var startApp: DynamicRippleTextView
     private lateinit var skip: DynamicRippleTextView
 
-    private lateinit var appStorageAccessResult: ActivityResultLauncher<Intent>
-
-    private val flags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-            Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_setup, container, false)
@@ -72,23 +65,15 @@ class Setup : ScopedFragment() {
         startApp = view.findViewById(R.id.start_app_now)
         skip = view.findViewById(R.id.skip_setup)
 
-        appStorageAccessResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            when (result.resultCode) {
-                Activity.RESULT_OK -> {
-                    val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
-                    result.data?.data?.normalizeScheme().also {
-                        requireActivity().contentResolver.takePersistableUriPermission(it!!, takeFlags)
-                        MainPreferences.setStoragePermissionUri(it)
-                        setStorageStatus(it)
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            permissions.forEach {
+                when (it.key) {
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE -> {
+                        if (it.value) {
+                            setStorageStatus()
+                            showStartAppButton()
+                        }
                     }
-
-                    showStartAppButton()
-                }
-                Activity.RESULT_CANCELED -> {
-                    showStartAppButton()
-                    setStorageStatus(null)
                 }
             }
         }
@@ -103,7 +88,14 @@ class Setup : ScopedFragment() {
         rootSwitchView.setChecked(ConfigurationPreferences.isUsingRoot())
 
         usageAccess.setOnClickListener {
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            intent.data = Uri.fromParts("package", requireContext().packageName, null)
+            kotlin.runCatching {
+                startActivity(intent)
+            }.onFailure {
+                intent.data = null
+                startActivity(intent)
+            }
         }
 
         storageAccess.setOnClickListener {
@@ -111,51 +103,60 @@ class Setup : ScopedFragment() {
         }
 
         startApp.setOnClickListener {
-            if (checkForPermission() && !requireActivity().contentResolver.persistedUriPermissions.isNullOrEmpty()) {
-                FragmentHelper.openFragment(
-                        requireActivity().supportFragmentManager,
-                        SplashScreen.newInstance(false), view.findViewById(R.id.imageView3))
+            if (requireArguments().getBoolean(BundleConstants.goBack)) {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
             } else {
-                Toast.makeText(requireContext(), R.string.ss_please_grant_storage_permission, Toast.LENGTH_SHORT).show()
+                if (requireContext().checkForUsageAccessPermission()) {
+                    openFragmentSlide(SplashScreen.newInstance(false))
+                } else {
+                    Toast.makeText(requireContext(), R.string.ss_please_grant_storage_permission, Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
         skip.setOnClickListener {
-            FragmentHelper.openFragment(
-                    requireActivity().supportFragmentManager,
-                    SplashScreen.newInstance(true), view.findViewById(R.id.imageView3))
+            openFragmentSlide(SplashScreen.newInstance(true))
         }
 
         accent.setOnClickListener {
-            FragmentHelper.openFragment(parentFragmentManager, AccentColor.newInstance(), "accent_color")
+            openFragmentSlide(AccentColor.newInstance(), "accent_color")
         }
 
         typeface.setOnClickListener {
-            FragmentHelper.openFragment(parentFragmentManager, AppearanceTypeFace.newInstance(), "typeface")
+            openFragmentSlide(AppearanceTypeFace.newInstance(), "app_typeface")
         }
 
-        rootSwitchView.setOnSwitchCheckedChangeListener {
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                if (it && Shell.rootAccess()) {
-                    ConfigurationPreferences.setUsingRoot(true)
-
-                    withContext(Dispatchers.Main) {
-                        rootSwitchView.setChecked(true)
+        rootSwitchView.setOnSwitchCheckedChangeListener { it ->
+            if (it) {
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    kotlin.runCatching {
+                        Shell.enableVerboseLogging = BuildConfig.DEBUG
+                        Shell.setDefaultBuilder(
+                                Shell.Builder
+                                    .create()
+                                    .setFlags(Shell.FLAG_REDIRECT_STDERR or Shell.FLAG_MOUNT_MASTER)
+                                    .setTimeout(10))
+                    }.getOrElse {
+                        it.printStackTrace()
                     }
-                } else {
-                    ConfigurationPreferences.setUsingRoot(false)
 
-                    withContext(Dispatchers.Main) {
-                        (false).also { rootSwitchView.setChecked(it) }
+                    Shell.getShell()
+
+                    if (Shell.isAppGrantedRoot() == true) {
+                        ConfigurationPreferences.setUsingRoot(true)
+                    } else {
+                        ConfigurationPreferences.setUsingRoot(false)
                     }
                 }
+            } else {
+                ConfigurationPreferences.setUsingRoot(false)
             }
         }
     }
 
     override fun onResume() {
         super.onResume()
-        if (checkForPermission()) {
+        if (requireContext().checkForUsageAccessPermission()) {
             usageStatus.text = getString(R.string.granted)
             usageAccess.isClickable = false
         } else {
@@ -163,40 +164,29 @@ class Setup : ScopedFragment() {
         }
 
         kotlin.runCatching {
-            setStorageStatus(Uri.parse(MainPreferences.getStoragePermissionUri()!!))
+            setStorageStatus()
         }.onFailure {
-            setStorageStatus(null)
+            setStorageStatus()
         }
 
         showStartAppButton()
     }
 
     private fun showStartAppButton() {
-        if (checkForPermission() && requireContext().contentResolver.persistedUriPermissions.isNotEmpty()) {
-            startApp.visible(true)
+        if (requireContext().checkForUsageAccessPermission() && checkStoragePermission()) {
+            startApp.visible(false)
+            skip.gone()
         } else {
-            startApp.invisible(true)
+            startApp.invisible(false)
+            skip.visible(false)
         }
     }
 
-    private fun checkForPermission(): Boolean {
-        val appOps = requireContext().getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            appOps.unsafeCheckOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), requireContext().packageName)
-        } else {
-            @Suppress("Deprecation")
-            appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(), requireContext().packageName)
-        }
-
-        return mode == AppOpsManagerCompat.MODE_ALLOWED
-    }
-
-    private fun setStorageStatus(uri: Uri?) {
-        if (requireContext().arePermissionsGranted(uri.toString())) {
+    private fun setStorageStatus() {
+        if (checkStoragePermission()) {
             storageStatus.text = getString(R.string.granted)
-            storageUri.text = uri.toString()
+            storageUri.text = Environment.getExternalStorageDirectory().toString()
             storageUri.visible(false)
-            storageStatus.setTextColor(requireContext().resolveAttrColor(R.attr.colorAppAccent))
             storageAccess.isClickable = false
         } else {
             storageStatus.text = getString(R.string.not_granted)
@@ -206,33 +196,39 @@ class Setup : ScopedFragment() {
     }
 
     private fun openDirectory() {
-        // read uriString from shared preferences
-        val uriString = MainPreferences.getStoragePermissionUri()
-        when {
-            uriString.isNull() -> {
-                askPermission()
-            }
-            requireContext().arePermissionsGranted(uriString!!) -> {
-                setStorageStatus(Uri.parse(uriString))
-            }
-            else -> {
-                askPermission()
-            }
+        if (checkStoragePermission()) {
+            setStorageStatus()
+        } else {
+            askPermission()
         }
     }
 
     /**
-     * Choose a directory using the system's file picker.
+     * Grant storage permission
      */
     private fun askPermission() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        intent.addFlags(flags)
-        appStorageAccessResult.launch(intent)
+        val uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri))
+        } else {
+            requestPermissionLauncher.launch(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE))
+        }
+    }
+
+    private fun checkStoragePermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Environment.isExternalStorageManager()
+        } else {
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        }
     }
 
     companion object {
-        fun newInstance(): Setup {
+        fun newInstance(goBack: Boolean = false): Setup {
             val args = Bundle()
+            args.putBoolean(BundleConstants.goBack, goBack)
             val fragment = Setup()
             fragment.arguments = args
             return fragment

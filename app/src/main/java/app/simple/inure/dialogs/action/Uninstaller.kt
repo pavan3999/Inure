@@ -3,7 +3,10 @@ package app.simple.inure.dialogs.action
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageInfo
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.UserHandle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,10 +16,10 @@ import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.apk.utils.PackageUtils.uninstallThisPackage
 import app.simple.inure.constants.BundleConstants
+import app.simple.inure.constants.IntentConstants
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.LoaderImageView
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.factories.actions.UninstallerViewModelFactory
 import app.simple.inure.preferences.ConfigurationPreferences
 import app.simple.inure.viewmodels.dialogs.UninstallerViewModel
@@ -36,8 +39,6 @@ class Uninstaller : ScopedBottomSheetFragment() {
         loader = view.findViewById(R.id.loader)
         status = view.findViewById(R.id.uninstall_result)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-
         return view
     }
 
@@ -45,17 +46,15 @@ class Uninstaller : ScopedBottomSheetFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         if (ConfigurationPreferences.isUsingRoot()) {
-            with(ViewModelProvider(this, UninstallerViewModelFactory(requireApplication(), packageInfo))[UninstallerViewModel::class.java]) {
-                error.observe(viewLifecycleOwner, {
-                    println(it)
-                    dismiss()
-                    Error.newInstance(it)
-                        .show(parentFragmentManager, "error")
-                })
+            with(ViewModelProvider(this, UninstallerViewModelFactory(packageInfo))[UninstallerViewModel::class.java]) {
+                getError().observe(viewLifecycleOwner) {
+                    showError(it)
+                }
 
-                getSuccessStatus().observe(viewLifecycleOwner, {
+                getSuccessStatus().observe(viewLifecycleOwner) {
                     when (it) {
                         "Done" -> {
+                            sendUninstalledBroadcast()
                             loader.loaded()
                             status.setText(R.string.uninstalled)
                             listener?.invoke()
@@ -65,7 +64,7 @@ class Uninstaller : ScopedBottomSheetFragment() {
                             status.setText(R.string.failed)
                         }
                     }
-                })
+                }
             }
         } else {
             status.setText(R.string.waiting)
@@ -73,6 +72,7 @@ class Uninstaller : ScopedBottomSheetFragment() {
             appUninstallObserver = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 when (result.resultCode) {
                     Activity.RESULT_OK -> {
+                        sendUninstalledBroadcast()
                         loader.loaded()
                         status.setText(R.string.uninstalled)
                         listener?.invoke()
@@ -86,6 +86,12 @@ class Uninstaller : ScopedBottomSheetFragment() {
 
             packageInfo.uninstallThisPackage(appUninstallObserver)
         }
+    }
+
+    private fun sendUninstalledBroadcast() {
+        val intent = Intent(IntentConstants.ACTION_APP_UNINSTALLED)
+        intent.data = Uri.parse("package:${packageInfo.packageName}")
+        requireContext().sendBroadcast(intent)
     }
 
     companion object {

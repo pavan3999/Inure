@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import app.simple.inure.R
 import app.simple.inure.decorations.views.XmlWebView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 
 class HtmlViewer : ScopedBottomSheetFragment() {
 
@@ -22,7 +22,7 @@ class HtmlViewer : ScopedBottomSheetFragment() {
         webView = view.findViewById(R.id.web_view)
 
         if (this.arguments != null) {
-            when (this.requireArguments().get("source")) {
+            when (this.requireArguments().getString("source")) {
                 getString(R.string.permissions) -> {
                     webView.loadUrl("file:///android_asset/html/required_permissions.html")
                 }

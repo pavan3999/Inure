@@ -52,7 +52,7 @@
             android:src="@drawable/ic_search"
             app:buttonTintType="accent" />
 
-        <app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+        <app.simple.inure.decorations.corners.DynamicCornerEditText
             android:id="@+id/activities_search"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -78,7 +78,6 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:layoutAnimation="@anim/list_animation_controller"
-        android:paddingVertical="10dp"
         app:isFastScrollRequired="false"
         app:statusBarPaddingRequired="false" />
 

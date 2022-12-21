@@ -19,27 +19,32 @@ public class ThemeLinearLayout extends LinearLayout implements ThemeChangedListe
     
     public ThemeLinearLayout(Context context) {
         super(context);
-        setBackground(false);
+        init();
     }
     
     public ThemeLinearLayout(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        setBackground(false);
+        init();
     }
     
     public ThemeLinearLayout(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        setBackground(false);
+        init();
     }
     
     public ThemeLinearLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        setBackground(false);
+        init();
     }
     
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
+    private void init() {
+        if (isInEditMode()) {
+            return;
+        }
+    
+        // TODO - try ThemeManager.INSTANCE.getTheme().getViewGroupTheme().getBackground()
+        setBackgroundColor(Color.WHITE);
+        setBackground(false);
         ThemeManager.INSTANCE.addListener(this);
     }
     
@@ -49,7 +54,6 @@ public class ThemeLinearLayout extends LinearLayout implements ThemeChangedListe
     }
     
     private void setBackground(boolean animate) {
-        setBackgroundColor(Color.WHITE);
         if (animate) {
             valueAnimator = Utils.animateBackgroundColor(this,
                     ThemeManager.INSTANCE.getTheme().getViewGroupTheme().getBackground());

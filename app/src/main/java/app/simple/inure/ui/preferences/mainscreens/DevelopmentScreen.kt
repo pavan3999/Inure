@@ -5,56 +5,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import app.simple.inure.R
-import app.simple.inure.decorations.ripple.DynamicRippleRelativeLayout
-import app.simple.inure.decorations.switchview.SwitchView
-import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.preferences.DevelopmentPreferences
-import app.simple.inure.ui.launcher.Setup
-import app.simple.inure.util.FragmentHelper
+import app.simple.inure.adapters.preferences.AdapterDevelopmentPreferences
+import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
+import app.simple.inure.extensions.fragments.ScopedFragment
 
 class DevelopmentScreen : ScopedFragment() {
 
-    private lateinit var setup: DynamicRippleRelativeLayout
-    private lateinit var textViewXmlViewerSwitchView: SwitchView
-    private lateinit var fullScreenAudio: SwitchView
-    private lateinit var hidePreferenceIndicator: SwitchView
+    private lateinit var recyclerView: CustomVerticalRecyclerView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.preferences_development, container, false)
 
-        setup = view.findViewById(R.id.development_setup)
-        textViewXmlViewerSwitchView = view.findViewById(R.id.configuration_use_text_view)
-        fullScreenAudio = view.findViewById(R.id.full_screen_player)
-        hidePreferenceIndicator = view.findViewById(R.id.prefs_drawable_switch)
-
-        startPostponedEnterTransition()
+        recyclerView = view.findViewById(R.id.development_recycler_view)
 
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        startPostponedEnterTransition()
 
-        textViewXmlViewerSwitchView.setChecked(DevelopmentPreferences.isWebViewXmlViewer())
-        fullScreenAudio.setChecked(DevelopmentPreferences.isAudioPlayerFullScreen())
-        hidePreferenceIndicator.setChecked(DevelopmentPreferences.isPreferencesIndicatorHidden())
-
-        setup.setOnClickListener {
-            clearExitTransition()
-            FragmentHelper.openFragment(parentFragmentManager, Setup.newInstance(), "setup")
-        }
-
-        textViewXmlViewerSwitchView.setOnSwitchCheckedChangeListener { isChecked ->
-            DevelopmentPreferences.setWebViewXmlViewer(isChecked)
-        }
-
-        fullScreenAudio.setOnSwitchCheckedChangeListener {
-            DevelopmentPreferences.setFullScreenAudioPlayer(it)
-        }
-
-        hidePreferenceIndicator.setOnSwitchCheckedChangeListener {
-            DevelopmentPreferences.setHidePreferencesIndicator(it)
-        }
+        recyclerView.adapter = AdapterDevelopmentPreferences()
     }
 
     companion object {

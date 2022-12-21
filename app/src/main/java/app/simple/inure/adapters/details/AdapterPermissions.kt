@@ -12,11 +12,11 @@ import app.simple.inure.decorations.overscroll.VerticalListViewHolder
 import app.simple.inure.decorations.ripple.DynamicRippleLinearLayout
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.models.PermissionInfo
+import app.simple.inure.preferences.AppearancePreferences
 import app.simple.inure.preferences.ConfigurationPreferences
 import app.simple.inure.preferences.PermissionPreferences
 import app.simple.inure.themes.manager.ThemeManager
 import app.simple.inure.util.AdapterUtils
-import app.simple.inure.util.ColorUtils.resolveAttrColor
 import app.simple.inure.util.NullSafety.isNotNull
 import app.simple.inure.util.StringUtils.optimizeToColoredString
 import app.simple.inure.util.ViewUtils.gone
@@ -25,7 +25,7 @@ import app.simple.inure.util.ViewUtils.visible
 class AdapterPermissions(private val permissions: MutableList<PermissionInfo>, private val keyword: String)
     : RecyclerView.Adapter<AdapterPermissions.Holder>() {
 
-    private lateinit var permissionCallbacks: PermissionCallbacks
+    private var permissionCallbacks: PermissionCallbacks? = null
     private var permissionLabelMode = PermissionPreferences.getLabelType()
     private val isRootMode = ConfigurationPreferences.isUsingRoot()
 
@@ -41,7 +41,7 @@ class AdapterPermissions(private val permissions: MutableList<PermissionInfo>, p
 
             /* ----------------------------------------------------------------- */
 
-            holder.status.setTextColor(holder.itemView.context.resolveAttrColor(R.attr.colorAppAccent))
+            holder.status.setTextColor(AppearancePreferences.getAccentColor())
             holder.desc.visible(false)
         } else {
             holder.name.text = permissions[position].name.optimizeToColoredString(".")
@@ -52,7 +52,7 @@ class AdapterPermissions(private val permissions: MutableList<PermissionInfo>, p
 
         if (isRootMode) {
             holder.container.setOnClickListener {
-                permissionCallbacks.onPermissionClicked(it, permissions[position], position)
+                permissionCallbacks?.onPermissionClicked(it, permissions[position], position)
             }
         }
 
@@ -73,10 +73,19 @@ class AdapterPermissions(private val permissions: MutableList<PermissionInfo>, p
             protectionToString(permissionInfo.permissionInfo!!.protectionLevel, permissionInfo.permissionInfo!!.protectionLevel, context)
         }
 
-        text = if (permissions[position].isGranted) {
-            text.toString() + " | " + context.getString(R.string.granted)
-        } else {
-            text.toString() + " | " + context.getString(R.string.rejected)
+        text = when (permissions[position].isGranted) {
+            0 -> {
+                text.toString() + " | " + context.getString(R.string.rejected)
+            }
+            1 -> {
+                text.toString() + " | " + context.getString(R.string.granted)
+            }
+            2 -> {
+                text.toString() + " | " + context.getString(R.string.unknown)
+            }
+            else -> {
+                text.toString() + " | " + context.getString(R.string.unknown)
+            }
         }
     }
 
@@ -111,7 +120,7 @@ class AdapterPermissions(private val permissions: MutableList<PermissionInfo>, p
      *                 is being changed
      * @param grantedStatus status of the permission if it is granted or not
      */
-    fun permissionStatusChanged(position: Int, grantedStatus: Boolean) {
+    fun permissionStatusChanged(position: Int, grantedStatus: Int) {
         permissions[position].isGranted = grantedStatus
         notifyItemChanged(position)
     }

@@ -14,14 +14,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
+import app.simple.inure.constants.MimeConstants
 import app.simple.inure.decorations.fastscroll.FastScrollerBuilder
 import app.simple.inure.decorations.padding.PaddingAwareNestedScrollView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceEditText
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.CustomProgressBar
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.KeyboardScopedFragment
 import app.simple.inure.factories.panels.CodeViewModelFactory
 import app.simple.inure.popups.app.PopupXmlViewer
 import app.simple.inure.util.ColorUtils.resolveAttrColor
@@ -30,7 +30,7 @@ import app.simple.inure.util.ViewUtils.visible
 import app.simple.inure.viewmodels.viewers.JavaViewModel
 import java.io.IOException
 
-class Java : ScopedFragment() {
+class Java : KeyboardScopedFragment() {
 
     private lateinit var java: TypeFaceEditText
     private lateinit var name: TypeFaceTextView
@@ -42,7 +42,7 @@ class Java : ScopedFragment() {
 
     private var path: String? = null
 
-    private val exportManifest = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri: Uri? ->
+    private val exportManifest = registerForActivityResult(ActivityResultContracts.CreateDocument(MimeConstants.javaType)) { uri: Uri? ->
         if (uri == null) {
             // Back button pressed.
             return@registerForActivityResult
@@ -70,14 +70,13 @@ class Java : ScopedFragment() {
         options = view.findViewById(R.id.java_viewer_options)
 
         path = requireArguments().getString(BundleConstants.pathToJava)!!
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
 
         codeViewModelFactory = CodeViewModelFactory(requireActivity().application,
                                                     packageInfo,
                                                     requireContext().resolveAttrColor(R.attr.colorAppAccent),
                                                     path!!)
 
-        javaViewModel = ViewModelProvider(this, codeViewModelFactory).get(JavaViewModel::class.java)
+        javaViewModel = ViewModelProvider(this, codeViewModelFactory)[JavaViewModel::class.java]
 
         startPostponedEnterTransition()
         FastScrollerBuilder(scrollView).setupAesthetics().build()
@@ -97,13 +96,7 @@ class Java : ScopedFragment() {
         }
 
         javaViewModel.getError().observe(viewLifecycleOwner) {
-            val e = Error.newInstance(it)
-            e.show(childFragmentManager, "error_dialog")
-            e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                override fun onDismiss() {
-                    requireActivity().onBackPressed()
-                }
-            })
+            showError(it)
         }
 
         options.setOnClickListener {

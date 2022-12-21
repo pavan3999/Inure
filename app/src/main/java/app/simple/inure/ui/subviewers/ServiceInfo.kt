@@ -12,9 +12,10 @@ import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.subpanels.ServiceInfoFactory
 import app.simple.inure.models.ServiceInfoModel
+import app.simple.inure.util.ParcelUtils.parcelable
 import app.simple.inure.viewmodels.subviewers.ServiceInfoViewModel
 
 class ServiceInfo : ScopedFragment() {
@@ -32,10 +33,10 @@ class ServiceInfo : ScopedFragment() {
         recyclerView = view.findViewById(R.id.activity_info_recycler_view)
         backButton = view.findViewById(R.id.activity_info_back_button)
 
-        with(requireArguments().getParcelable<ServiceInfoModel>(BundleConstants.serviceInfo)!!) {
-            packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
+        with(requireArguments().parcelable<ServiceInfoModel>(BundleConstants.serviceInfo)!!) {
+            packageInfo = requireArguments().parcelable(BundleConstants.packageInfo)!!
             this@ServiceInfo.name.text = name
-            serviceInfoFactory = ServiceInfoFactory(requireActivity().application, this, packageInfo)
+            serviceInfoFactory = ServiceInfoFactory(this, packageInfo)
         }
 
         serviceInfoViewModel = ViewModelProvider(this, serviceInfoFactory).get(ServiceInfoViewModel::class.java)
@@ -48,12 +49,12 @@ class ServiceInfo : ScopedFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        serviceInfoViewModel.getServicesInfo().observe(viewLifecycleOwner, {
+        serviceInfoViewModel.getServicesInfo().observe(viewLifecycleOwner) {
             recyclerView.adapter = AdapterInformation(it)
-        })
+        }
 
         backButton.setOnClickListener {
-            requireActivity().onBackPressed()
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
     }
 

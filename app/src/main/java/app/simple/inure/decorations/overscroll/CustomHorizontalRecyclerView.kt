@@ -8,31 +8,37 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.simple.inure.R
-import app.simple.inure.decorations.overscroll.RecyclerViewConstants.flingTranslationMagnitude
-import app.simple.inure.decorations.overscroll.RecyclerViewConstants.overScrollRotationMagnitude
-import app.simple.inure.decorations.overscroll.RecyclerViewConstants.overScrollTranslationMagnitude
+import app.simple.inure.decorations.theme.ThemeRecyclerView
 import app.simple.inure.preferences.AccessibilityPreferences
 import app.simple.inure.themes.manager.ThemeManager
+import app.simple.inure.util.ConditionUtils.invert
+import app.simple.inure.util.RecyclerViewUtils.flingTranslationMagnitude
+import app.simple.inure.util.RecyclerViewUtils.overScrollRotationMagnitude
+import app.simple.inure.util.RecyclerViewUtils.overScrollTranslationMagnitude
 import app.simple.inure.util.StatusBarHeight
 
 /**
  * Custom recycler view with nice layout animation and
  * smooth overscroll effect and various states retention
  */
-class CustomHorizontalRecyclerView(context: Context, attrs: AttributeSet?) : RecyclerView(context, attrs) {
+open class CustomHorizontalRecyclerView(context: Context, attrs: AttributeSet?) : ThemeRecyclerView(context, attrs) {
 
     private var isLandscape = false
 
     init {
-        context.theme.obtainStyledAttributes(attrs, R.styleable.CustomRecyclerView, 0, 0).apply {
+        context.theme.obtainStyledAttributes(attrs, R.styleable.RecyclerView, 0, 0).apply {
             try {
-                if (getBoolean(R.styleable.CustomRecyclerView_statusBarPaddingRequired, true)) {
+                if (getBoolean(R.styleable.RecyclerView_statusBarPaddingRequired, true)) {
                     setPadding(paddingLeft, StatusBarHeight.getStatusBarHeight(resources) + paddingTop, paddingRight, paddingBottom)
                 }
 
                 isLandscape = StatusBarHeight.isLandscape(context)
-                if (AccessibilityPreferences.isAnimationReduced())
-                    layoutAnimation = null
+
+                if (isInEditMode.invert()) {
+                    if (AccessibilityPreferences.isAnimationReduced()) {
+                        layoutAnimation = null
+                    }
+                }
             } finally {
                 recycle()
             }
@@ -46,18 +52,20 @@ class CustomHorizontalRecyclerView(context: Context, attrs: AttributeSet?) : Rec
 
         setHasFixedSize(true)
 
-        if (AccessibilityPreferences.isDividerEnabled()) {
-            val divider = DividerItemDecoration(context, DividerItemDecoration.HORIZONTAL)
+        if (isInEditMode.invert()) {
+            if (AccessibilityPreferences.isDividerEnabled()) {
+                val divider = DividerItemDecoration(context, DividerItemDecoration.HORIZONTAL)
 
-            divider.setDrawable(ShapeDrawable().apply {
-                intrinsicHeight = 1
-                paint.color = ThemeManager.theme.viewGroupTheme.dividerBackground
-            })
+                divider.setDrawable(ShapeDrawable().apply {
+                    intrinsicHeight = 1
+                    paint.color = ThemeManager.theme.viewGroupTheme.dividerBackground
+                })
 
-            addItemDecoration(divider)
+                addItemDecoration(divider)
+            }
         }
 
-        this.edgeEffectFactory = object : RecyclerView.EdgeEffectFactory() {
+        this.edgeEffectFactory = object : EdgeEffectFactory() {
             override fun createEdgeEffect(recyclerView: RecyclerView, direction: Int): EdgeEffect {
                 return object : EdgeEffect(recyclerView.context) {
                     override fun onPull(deltaDistance: Float) {
@@ -129,8 +137,11 @@ class CustomHorizontalRecyclerView(context: Context, attrs: AttributeSet?) : Rec
     override fun setAdapter(adapter: Adapter<*>?) {
         super.setAdapter(adapter)
         adapter?.stateRestorationPolicy = Adapter.StateRestorationPolicy.ALLOW
-        if (!AccessibilityPreferences.isAnimationReduced())
-            scheduleLayoutAnimation()
+        if (isInEditMode.invert()) {
+            if (!AccessibilityPreferences.isAnimationReduced()) {
+                scheduleLayoutAnimation()
+            }
+        }
     }
 
     private inline fun <reified T : HorizontalListViewHolder> RecyclerView.forEachVisibleHolder(action: (T) -> Unit) {

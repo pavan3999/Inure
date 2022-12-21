@@ -12,7 +12,7 @@ import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.views.CustomProgressBar
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.panels.PackageInfoFactory
 import app.simple.inure.popups.viewers.PopupInformation
 import app.simple.inure.util.ViewUtils.gone
@@ -34,10 +34,8 @@ class Information : ScopedFragment() {
         back = view.findViewById(R.id.app_info_back_button)
         progress = view.findViewById(R.id.information_data_progress)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-
-        packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        viewModel = ViewModelProvider(this, packageInfoFactory).get(AppInformationViewModel::class.java)
+        packageInfoFactory = PackageInfoFactory(packageInfo)
+        viewModel = ViewModelProvider(this, packageInfoFactory)[AppInformationViewModel::class.java]
 
         return view
     }
@@ -61,7 +59,7 @@ class Information : ScopedFragment() {
         }
 
         back.setOnClickListener {
-            activity?.onBackPressed()
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
     }
 

@@ -2,6 +2,7 @@ package app.simple.inure.decorations.theme;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -12,12 +13,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
 import app.simple.inure.R;
+import app.simple.inure.preferences.AppearancePreferences;
 import app.simple.inure.themes.interfaces.ThemeChangedListener;
 import app.simple.inure.themes.manager.Theme;
 import app.simple.inure.themes.manager.ThemeManager;
-import app.simple.inure.util.ColorUtils;
 
-public class ThemeButton extends AppCompatImageButton implements ThemeChangedListener {
+public class ThemeButton extends AppCompatImageButton implements ThemeChangedListener, SharedPreferences.OnSharedPreferenceChangeListener {
     
     private ValueAnimator valueAnimator;
     protected int tintMode;
@@ -33,6 +34,9 @@ public class ThemeButton extends AppCompatImageButton implements ThemeChangedLis
     }
     
     private void init(AttributeSet attrs) {
+        if (isInEditMode()) {
+            return;
+        }
         TypedArray typedArray = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.ThemeButton, 0, 0);
         tintMode = typedArray.getInteger(R.styleable.ThemeButton_buttonTintType, 0);
         setTint(getTintColor(tintMode), false);
@@ -59,7 +63,7 @@ public class ThemeButton extends AppCompatImageButton implements ThemeChangedLis
                 return ThemeManager.INSTANCE.getTheme().getIconTheme().getSecondaryIconColor();
             }
             case 2: {
-                return ColorUtils.INSTANCE.resolveAttrColor(getContext(), R.attr.colorAppAccent);
+                return AppearancePreferences.INSTANCE.getAccentColor();
             }
             case 3: {
                 return Color.WHITE;
@@ -85,6 +89,10 @@ public class ThemeButton extends AppCompatImageButton implements ThemeChangedLis
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        if (isInEditMode()) {
+            return;
+        }
+        app.simple.inure.preferences.SharedPreferences.INSTANCE.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
         ThemeManager.INSTANCE.addListener(this);
     }
     
@@ -97,8 +105,14 @@ public class ThemeButton extends AppCompatImageButton implements ThemeChangedLis
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         ThemeManager.INSTANCE.removeListener(this);
+        app.simple.inure.preferences.SharedPreferences.INSTANCE.getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
         if (valueAnimator != null) {
             valueAnimator.cancel();
         }
+    }
+    
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    
     }
 }

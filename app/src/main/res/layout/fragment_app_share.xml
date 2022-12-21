@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:elevation="@dimen/dialog_elevation"
     android:orientation="vertical"
     android:padding="@dimen/dialog_padding">
 
@@ -28,7 +27,7 @@
         app:appFontStyle="medium" />
 
 
-    <app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+    <app.simple.inure.decorations.corners.DynamicCornerEditText
         android:id="@+id/share_edit_text"
         android:layout_width="match_parent"
         android:layout_height="0dp"

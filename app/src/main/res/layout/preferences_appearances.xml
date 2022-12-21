@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
     android:orientation="vertical">
 
     <app.simple.inure.decorations.padding.PaddingAwareLinearLayout
@@ -39,7 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.core.widget.NestedScrollView
+        <app.simple.inure.decorations.edgeeffect.EdgeEffectNestedScrollView
             android:id="@+id/scroll_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -127,7 +126,6 @@
                         android:layout_height="@dimen/preference_icon_size"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
-                        android:contentDescription="@string/typeface_icon"
                         android:src="@drawable/ic_colors"
                         app:tintType="secondary" />
 
@@ -250,7 +248,6 @@
                         android:layout_height="@dimen/preference_icon_size"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
-                        android:contentDescription="@string/typeface_icon"
                         android:src="@drawable/ic_text_fields"
                         app:tintType="secondary" />
 
@@ -297,7 +294,6 @@
                         android:layout_height="@dimen/preference_icon_size"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
-                        android:contentDescription="@string/typeface_icon"
                         android:src="@drawable/ic_rounded_corner"
                         app:tintType="secondary" />
 
@@ -331,74 +327,6 @@
                         app:textColorStyle="tertiary" />
 
                 </app.simple.inure.decorations.ripple.DynamicRippleRelativeLayout>
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/appearance_full_screen"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="10dp"
-                    android:clipChildren="false"
-                    android:clipToPadding="false"
-                    android:padding="15dp">
-
-                    <app.simple.inure.decorations.theme.ThemeIcon
-                        android:id="@+id/full_screen_icon"
-                        android:layout_width="@dimen/preference_icon_size"
-                        android:layout_height="@dimen/preference_icon_size"
-                        android:layout_centerVertical="true"
-                        android:src="@drawable/ic_fullscreen"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:tintType="secondary"
-                        tools:ignore="ContentDescription" />
-
-                    <app.simple.inure.decorations.typeface.TypeFaceTextView
-                        android:id="@+id/full_screen_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="15dp"
-                        android:drawablePadding="5dp"
-                        android:text="@string/disable_transparent_status_bar"
-                        android:textSize="@dimen/preferences_title_text_size"
-                        app:appFontStyle="bold"
-                        app:drawableEndCompat="@drawable/ic_link_tiny"
-                        app:drawableTintStyle="accent"
-                        app:layout_constraintBottom_toTopOf="@+id/transparent_status_desc"
-                        app:layout_constraintEnd_toStartOf="@+id/appearance_transparent_status_switch"
-                        app:layout_constraintHorizontal_bias="0.0"
-                        app:layout_constraintStart_toEndOf="@+id/full_screen_icon"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:textColorStyle="primary" />
-
-                    <app.simple.inure.decorations.typeface.TypeFaceTextView
-                        android:id="@+id/transparent_status_desc"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="15dp"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginEnd="15dp"
-                        android:text="@string/desc_transparent_status"
-                        android:textSize="@dimen/preferences_description_text_size"
-                        app:appFontStyle="regular"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/appearance_transparent_status_switch"
-                        app:layout_constraintStart_toEndOf="@+id/full_screen_icon"
-                        app:layout_constraintTop_toBottomOf="@id/full_screen_title"
-                        app:textColorStyle="tertiary" />
-
-                    <app.simple.inure.decorations.switchview.SwitchView
-                        android:id="@+id/appearance_transparent_status_switch"
-                        android:layout_width="@dimen/switch_width"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:clipChildren="false"
-                        android:clipToPadding="false"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <app.simple.inure.decorations.typeface.TypeFaceTextView
                     android:layout_width="wrap_content"
@@ -488,7 +416,6 @@
                         android:layout_height="@dimen/preference_icon_size"
                         android:layout_alignParentStart="true"
                         android:layout_centerVertical="true"
-                        android:contentDescription="@string/typeface_icon"
                         android:src="@drawable/ic_ruler"
                         app:tintType="secondary" />
 
@@ -587,6 +514,6 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+        </app.simple.inure.decorations.edgeeffect.EdgeEffectNestedScrollView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </app.simple.inure.decorations.theme.ThemeLinearLayout>

@@ -8,12 +8,10 @@ import android.view.ViewGroup
 import app.simple.inure.R
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
 import app.simple.inure.decorations.switchview.SwitchView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.popups.apps.PopupAppsCategory
 import app.simple.inure.popups.search.PopupSortingStyle
 import app.simple.inure.preferences.SearchPreferences
-import app.simple.inure.ui.panels.Preferences
-import app.simple.inure.util.FragmentHelper
 import app.simple.inure.util.Sort
 
 class SearchMenu : ScopedBottomSheetFragment() {
@@ -22,14 +20,16 @@ class SearchMenu : ScopedBottomSheetFragment() {
     private lateinit var sortingStyle: DynamicRippleTextView
     private lateinit var openAppsSettings: DynamicRippleTextView
     private lateinit var ignoreCase: SwitchView
+    private lateinit var deepSearch: SwitchView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.dialog_search_menu, container, false)
+        val view = inflater.inflate(R.layout.dialog_menu_search, container, false)
 
         appsCategory = view.findViewById(R.id.dialog_search_apps_category)
         sortingStyle = view.findViewById(R.id.dialog_search_apps_sorting)
         openAppsSettings = view.findViewById(R.id.dialog_open_apps_settings)
         ignoreCase = view.findViewById(R.id.ignore_case)
+        deepSearch = view.findViewById(R.id.deep_search)
 
         return view
     }
@@ -40,6 +40,7 @@ class SearchMenu : ScopedBottomSheetFragment() {
         setSortingStyle()
         setListCategory()
         ignoreCase.setChecked(SearchPreferences.isCasingIgnored())
+        deepSearch.setChecked(SearchPreferences.isDeepSearchEnabled())
 
         sortingStyle.setOnClickListener {
             PopupSortingStyle(it)
@@ -50,13 +51,15 @@ class SearchMenu : ScopedBottomSheetFragment() {
         }
 
         openAppsSettings.setOnClickListener {
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Preferences.newInstance(),
-                                        "prefs")
+            openSettings()
         }
 
         ignoreCase.setOnSwitchCheckedChangeListener {
             SearchPreferences.setIgnoreCasing(it)
+        }
+
+        deepSearch.setOnSwitchCheckedChangeListener {
+            SearchPreferences.setDeepSearch(it)
         }
     }
 

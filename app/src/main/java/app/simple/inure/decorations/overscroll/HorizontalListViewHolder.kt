@@ -1,13 +1,19 @@
 package app.simple.inure.decorations.overscroll
 
+import android.graphics.drawable.Drawable
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import androidx.recyclerview.widget.RecyclerView
-import app.simple.inure.decorations.overscroll.RecyclerViewConstants.bouncyValue
-import app.simple.inure.decorations.overscroll.RecyclerViewConstants.stiffnessValue
+import app.simple.inure.preferences.BehaviourPreferences
 
 open class HorizontalListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+    fun getDrawable(resID: Int): Drawable {
+        return ContextCompat.getDrawable(itemView.context, resID)!!
+    }
+
     var currentVelocity = 0f
 
     /**
@@ -18,10 +24,10 @@ open class HorizontalListViewHolder(itemView: View) : RecyclerView.ViewHolder(it
      */
     val rotation: SpringAnimation = SpringAnimation(itemView, SpringAnimation.ROTATION)
             .setSpring(
-                SpringForce()
+                    SpringForce()
                         .setFinalPosition(0f)
-                        .setDampingRatio(bouncyValue)
-                        .setStiffness(stiffnessValue)
+                        .setDampingRatio(BehaviourPreferences.getDampingRatio())
+                        .setStiffness(BehaviourPreferences.getStiffness())
             )
             .addUpdateListener { _, _, velocity ->
                 currentVelocity = velocity
@@ -33,9 +39,9 @@ open class HorizontalListViewHolder(itemView: View) : RecyclerView.ViewHolder(it
      */
     val translationX: SpringAnimation = SpringAnimation(itemView, SpringAnimation.TRANSLATION_X)
             .setSpring(
-                SpringForce()
+                    SpringForce()
                         .setFinalPosition(0f)
-                        .setDampingRatio(bouncyValue)
-                        .setStiffness(stiffnessValue)
+                        .setDampingRatio(BehaviourPreferences.getDampingRatio())
+                        .setStiffness(BehaviourPreferences.getStiffness())
             )
 }

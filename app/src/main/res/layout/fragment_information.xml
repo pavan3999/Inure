@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:elevation="1dp"
         android:padding="@dimen/header_padding">
 
         <app.simple.inure.decorations.ripple.DynamicRippleImageButton
@@ -31,6 +32,9 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:text="@string/app_information"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:textSize="@dimen/header_font_size"
             android:transitionName="@string/app_information"
             app:appFontStyle="bold"

@@ -4,12 +4,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import app.simple.inure.R
-import app.simple.inure.decorations.checkbox.CheckBox
+import app.simple.inure.decorations.checkbox.InureCheckBox
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
-import app.simple.inure.extension.popup.BasePopupWindow
-import app.simple.inure.extension.popup.PopupLinearLayout
+import app.simple.inure.extensions.popup.BasePopupWindow
+import app.simple.inure.extensions.popup.PopupLinearLayout
 import app.simple.inure.preferences.SensorsPreferences
-import app.simple.inure.util.SensorsSort
+import app.simple.inure.util.SortSensors
 
 class PopupSortingStyle(view: View) : BasePopupWindow() {
 
@@ -18,7 +18,7 @@ class PopupSortingStyle(view: View) : BasePopupWindow() {
     private val maximumRange: DynamicRippleTextView
     private val resolution: DynamicRippleTextView
 
-    private val descCheckBox: CheckBox
+    private val descCheckBox: InureCheckBox
 
     init {
         val contentView = LayoutInflater.from(view.context).inflate(R.layout.popup_sensors_sort, PopupLinearLayout(view.context))
@@ -30,18 +30,18 @@ class PopupSortingStyle(view: View) : BasePopupWindow() {
         descCheckBox = contentView.findViewById(R.id.sort_reversed_checkbox)
 
         when (SensorsPreferences.getSortStyle()) {
-            SensorsSort.NAME -> name.isSelected = true
-            SensorsSort.POWER -> power.isSelected = true
-            SensorsSort.MAX_RANGE -> maximumRange.isSelected = true
-            SensorsSort.RESOLUTION -> resolution.isSelected = true
+            SortSensors.NAME -> name.isSelected = true
+            SortSensors.POWER -> power.isSelected = true
+            SortSensors.MAX_RANGE -> maximumRange.isSelected = true
+            SortSensors.RESOLUTION -> resolution.isSelected = true
         }
 
         descCheckBox.setChecked(SensorsPreferences.isReverseSorting())
 
-        name.onClick(SensorsSort.NAME)
-        power.onClick(SensorsSort.POWER)
-        maximumRange.onClick(SensorsSort.MAX_RANGE)
-        resolution.onClick(SensorsSort.RESOLUTION)
+        name.onClick(SortSensors.NAME)
+        power.onClick(SortSensors.POWER)
+        maximumRange.onClick(SortSensors.MAX_RANGE)
+        resolution.onClick(SortSensors.RESOLUTION)
 
         descCheckBox.setOnCheckedChangeListener { isChecked ->
             SensorsPreferences.setReverseSorting(isChecked)

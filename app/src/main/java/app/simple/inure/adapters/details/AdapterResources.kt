@@ -12,7 +12,7 @@ import app.simple.inure.util.StringUtils.optimizeToColoredString
 
 class AdapterResources(private val list: MutableList<String>, private val keyword: String) : RecyclerView.Adapter<AdapterResources.Holder>() {
 
-    private lateinit var resourceCallbacks: ResourceCallbacks
+    private var resourceCallbacks: ResourceCallbacks? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         return Holder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_resources, parent, false))
@@ -20,13 +20,14 @@ class AdapterResources(private val list: MutableList<String>, private val keywor
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         holder.xml.text = list[position].optimizeToColoredString("/")
+        list[position].optimizeToColoredString("...") // fade ellipsis maybe?
 
         holder.xml.setOnClickListener {
-            resourceCallbacks.onResourceClicked(list[position])
+            resourceCallbacks?.onResourceClicked(list[position])
         }
 
         holder.xml.setOnLongClickListener {
-            resourceCallbacks.onResourceLongClicked(list[position])
+            resourceCallbacks?.onResourceLongClicked(list[position])
             true
         }
 

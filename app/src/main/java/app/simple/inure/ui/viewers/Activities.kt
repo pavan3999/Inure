@@ -12,32 +12,22 @@ import app.simple.inure.R
 import app.simple.inure.adapters.details.AdapterActivities
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
-import app.simple.inure.decorations.ripple.DynamicRippleImageButton
-import app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
-import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.dialogs.action.ActivityLauncher
 import app.simple.inure.dialogs.action.ComponentState
-import app.simple.inure.dialogs.miscellaneous.Error
 import app.simple.inure.dialogs.miscellaneous.IntentAction
-import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.extension.popup.PopupMenuCallback
+import app.simple.inure.extensions.fragments.SearchBarScopedFragment
+import app.simple.inure.extensions.popup.PopupMenuCallback
 import app.simple.inure.factories.panels.PackageInfoFactory
 import app.simple.inure.models.ActivityInfoModel
 import app.simple.inure.popups.viewers.PopupActivitiesMenu
 import app.simple.inure.preferences.ActivitiesPreferences
 import app.simple.inure.ui.subviewers.ActivityInfo
 import app.simple.inure.util.ActivityUtils
-import app.simple.inure.util.FragmentHelper
-import app.simple.inure.util.ViewUtils.gone
-import app.simple.inure.util.ViewUtils.visible
 import app.simple.inure.viewmodels.viewers.ActivitiesViewModel
 
-class Activities : ScopedFragment() {
+class Activities : SearchBarScopedFragment() {
 
     private lateinit var recyclerView: CustomVerticalRecyclerView
-    private lateinit var search: DynamicRippleImageButton
-    private lateinit var title: TypeFaceTextView
-    private lateinit var searchBox: TypeFaceEditTextDynamicCorner
 
     private lateinit var activitiesViewModel: ActivitiesViewModel
     private lateinit var packageInfoFactory: PackageInfoFactory
@@ -51,11 +41,10 @@ class Activities : ScopedFragment() {
         searchBox = view.findViewById(R.id.activities_search)
         title = view.findViewById(R.id.activities_title)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
-        packageInfoFactory = PackageInfoFactory(requireActivity().application, packageInfo)
-        activitiesViewModel = ViewModelProvider(this, packageInfoFactory).get(ActivitiesViewModel::class.java)
+        packageInfoFactory = PackageInfoFactory(packageInfo)
+        activitiesViewModel = ViewModelProvider(this, packageInfoFactory)[ActivitiesViewModel::class.java]
 
-        searchBoxState()
+        searchBoxState(false, ActivitiesPreferences.isSearchVisible())
         startPostponedEnterTransition()
 
         return view
@@ -63,6 +52,7 @@ class Activities : ScopedFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        fullVersionCheck()
 
         activitiesViewModel.getActivities().observe(viewLifecycleOwner) { it ->
             adapterActivities = AdapterActivities(packageInfo, it, searchBox.text.toString().trim())
@@ -70,10 +60,7 @@ class Activities : ScopedFragment() {
 
             adapterActivities?.setOnActivitiesCallbacks(object : AdapterActivities.Companion.ActivitiesCallbacks {
                 override fun onActivityClicked(activityInfoModel: ActivityInfoModel, packageId: String) {
-                    clearExitTransition()
-                    FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                                ActivityInfo.newInstance(activityInfoModel, packageInfo),
-                                                "activity_info")
+                    openFragmentSlide(ActivityInfo.newInstance(activityInfoModel, packageInfo), "activity_info")
                 }
 
                 override fun onActivityLongPressed(packageId: String, packageInfo: PackageInfo, icon: View, isComponentEnabled: Boolean, position: Int) {
@@ -106,8 +93,7 @@ class Activities : ScopedFragment() {
                     kotlin.runCatching {
                         ActivityUtils.launchPackage(requireContext(), packageName, name)
                     }.getOrElse {
-                        Error.newInstance(it.message ?: getString(R.string.unknown))
-                            .show(childFragmentManager, "error_dialog")
+                        showError(it)
                     }
                 }
             })
@@ -120,13 +106,11 @@ class Activities : ScopedFragment() {
         }
 
         activitiesViewModel.getError().observe(viewLifecycleOwner) {
-            val e = Error.newInstance(it)
-            e.show(childFragmentManager, "error_dialog")
-            e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                override fun onDismiss() {
-                    requireActivity().onBackPressed()
-                }
-            })
+            showError(it)
+        }
+
+        activitiesViewModel.notFound.observe(viewLifecycleOwner) {
+            showWarning(R.string.no_activities_found)
         }
 
         search.setOnClickListener {
@@ -138,24 +122,10 @@ class Activities : ScopedFragment() {
         }
     }
 
-    private fun searchBoxState() {
-        if (ActivitiesPreferences.isSearchVisible()) {
-            search.setImageResource(R.drawable.ic_close)
-            title.gone()
-            searchBox.visible(true)
-            searchBox.showInput()
-        } else {
-            search.setImageResource(R.drawable.ic_search)
-            title.visible(true)
-            searchBox.gone()
-            searchBox.hideInput()
-        }
-    }
-
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             ActivitiesPreferences.activitySearch -> {
-                searchBoxState()
+                searchBoxState(true, ActivitiesPreferences.isSearchVisible())
             }
         }
     }

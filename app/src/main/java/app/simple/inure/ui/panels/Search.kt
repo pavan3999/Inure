@@ -10,24 +10,25 @@ import android.widget.ImageView
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
+import app.simple.inure.adapters.ui.AdapterDeepSearch
 import app.simple.inure.adapters.ui.AdapterSearch
+import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView
 import app.simple.inure.decorations.searchview.SearchView
 import app.simple.inure.decorations.searchview.SearchViewEventListener
 import app.simple.inure.dialogs.menus.AppsMenu
 import app.simple.inure.dialogs.menus.SearchMenu
-import app.simple.inure.extension.fragments.ScopedFragment
-import app.simple.inure.interfaces.adapters.AppsAdapterCallbacks
+import app.simple.inure.extensions.fragments.KeyboardScopedFragment
+import app.simple.inure.interfaces.adapters.AdapterCallbacks
 import app.simple.inure.preferences.SearchPreferences
-import app.simple.inure.ui.app.AppInfo
-import app.simple.inure.util.FragmentHelper
 import app.simple.inure.viewmodels.panels.SearchViewModel
 
-class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
+class Search : KeyboardScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
     private lateinit var searchView: SearchView
     private lateinit var recyclerView: CustomVerticalRecyclerView
     private lateinit var appsAdapterSearchSmall: AdapterSearch
+    private lateinit var adapterDeepSearch: AdapterDeepSearch
 
     private lateinit var searchViewModel: SearchViewModel
 
@@ -37,9 +38,9 @@ class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListe
         searchView = view.findViewById(R.id.search_view)
         recyclerView = view.findViewById(R.id.search_recycler_view)
 
-        if (requireArguments().getBoolean("first_launch")) {
+        if (requireArguments().getBoolean(BundleConstants.firstLaunch)) {
             startPostponedEnterTransition()
-            requireArguments().putBoolean("first_launch", false)
+            requireArguments().putBoolean(BundleConstants.firstLaunch, false)
         }
 
         searchViewModel = ViewModelProvider(requireActivity())[SearchViewModel::class.java]
@@ -50,27 +51,59 @@ class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        searchView.editText.setWindowInsetsAnimationCallback()
+        searchView.showInput()
+
         searchViewModel.getSearchData().observe(viewLifecycleOwner) {
-            postponeEnterTransition()
+            if (!SearchPreferences.isDeepSearchEnabled()) {
+                postponeEnterTransition()
+                searchView.hideLoader()
+                searchView.setNewNumber(it.size)
 
-            searchView.setNewNumber(it.size)
+                appsAdapterSearchSmall = AdapterSearch(it, searchViewModel.getSearchKeywords().value ?: "")
+                recyclerView.adapter = appsAdapterSearchSmall
 
-            appsAdapterSearchSmall = AdapterSearch(it, searchViewModel.getSearchKeywords().value ?: "")
-            recyclerView.adapter = appsAdapterSearchSmall
+                appsAdapterSearchSmall.setOnItemClickListener(object : AdapterCallbacks {
+                    override fun onAppClicked(packageInfo: PackageInfo, icon: ImageView) {
+                        openAppInfo(packageInfo, icon)
+                    }
 
-            appsAdapterSearchSmall.setOnItemClickListener(object : AppsAdapterCallbacks {
-                override fun onAppClicked(packageInfo: PackageInfo, icon: ImageView) {
-                    openAppInfo(packageInfo, icon)
+                    override fun onAppLongPressed(packageInfo: PackageInfo, icon: ImageView) {
+                        AppsMenu.newInstance(packageInfo)
+                            .show(childFragmentManager, "apps_menu")
+                    }
+                })
+
+                (view.parent as? ViewGroup)?.doOnPreDraw {
+                    startPostponedEnterTransition()
                 }
+            }
+        }
 
-                override fun onAppLongPressed(packageInfo: PackageInfo, icon: ImageView) {
-                    AppsMenu.newInstance(packageInfo)
-                        .show(childFragmentManager, "apps_menu")
+        searchViewModel.getDeepSearchData().observe(viewLifecycleOwner) {
+            if (SearchPreferences.isDeepSearchEnabled()) {
+                postponeEnterTransition()
+
+                searchView.setNewNumber(it.size)
+                searchView.hideLoader()
+
+                adapterDeepSearch = AdapterDeepSearch(it, searchViewModel.getSearchKeywords().value ?: "")
+                recyclerView.adapter = adapterDeepSearch
+
+                adapterDeepSearch.setOnItemClickListener(object : AdapterCallbacks {
+                    override fun onAppClicked(packageInfo: PackageInfo, icon: ImageView) {
+                        openAppInfo(packageInfo, icon)
+                    }
+
+                    override fun onAppLongPressed(packageInfo: PackageInfo, icon: ImageView) {
+                        AppsMenu.newInstance(packageInfo)
+                            .show(childFragmentManager, "apps_menu")
+                    }
+                })
+
+                (view.parent as? ViewGroup)?.doOnPreDraw {
+                    startPostponedEnterTransition()
                 }
-            })
-
-            (view.parent as? ViewGroup)?.doOnPreDraw {
-                startPostponedEnterTransition()
             }
         }
 
@@ -86,22 +119,21 @@ class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListe
         })
     }
 
-    private fun openAppInfo(packageInfo: PackageInfo, icon: ImageView) {
-        FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                    AppInfo.newInstance(packageInfo, icon.transitionName),
-                                    icon, "app_info_by_search")
-    }
-
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when (key) {
             SearchPreferences.sortStyle,
             SearchPreferences.isSortingReversed,
-            SearchPreferences.listAppsCategory -> {
-                searchViewModel.loadSearchData(SearchPreferences.getLastSearchKeyword())
+            SearchPreferences.listAppsCategory,
+            SearchPreferences.deepSearch -> {
+                searchViewModel.initiateSearch(SearchPreferences.getLastSearchKeyword())
             }
             SearchPreferences.ignoreCasing -> {
-                appsAdapterSearchSmall.ignoreCasing = SearchPreferences.isCasingIgnored()
-                searchViewModel.loadSearchData(SearchPreferences.getLastSearchKeyword())
+                if (SearchPreferences.isDeepSearchEnabled()) {
+                    adapterDeepSearch.ignoreCasing = SearchPreferences.isCasingIgnored()
+                } else {
+                    appsAdapterSearchSmall.ignoreCasing = SearchPreferences.isCasingIgnored()
+                }
+                searchViewModel.initiateSearch(SearchPreferences.getLastSearchKeyword())
             }
         }
     }
@@ -109,7 +141,7 @@ class Search : ScopedFragment(), SharedPreferences.OnSharedPreferenceChangeListe
     companion object {
         fun newInstance(firstLaunch: Boolean): Search {
             val args = Bundle()
-            args.putBoolean("first_launch", firstLaunch)
+            args.putBoolean(BundleConstants.firstLaunch, firstLaunch)
             val fragment = Search()
             fragment.arguments = args
             return fragment

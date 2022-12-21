@@ -1,21 +1,23 @@
 package app.simple.inure.preferences
 
-import android.net.Uri
-import androidx.annotation.NonNull
 import app.simple.inure.popups.apps.PopupAppsCategory
 import app.simple.inure.preferences.SharedPreferences.getSharedPreferences
+import app.simple.inure.util.CalendarUtils
 import app.simple.inure.util.Sort
-import org.jetbrains.annotations.NotNull
+import java.util.*
 
 /**
  * All app preferences
  */
 object MainPreferences {
 
-    private const val launchCount = "launch_count"
+    private const val MAX_TRIAL_DAYS = 15
+
+    private const val launchCount = "main_app_launch_count"
     private const val dayNightMode = "is_day_night_mode"
     private const val appLanguage = "current_language_locale"
-    private const val storagePermissionUri = "storage_permission_uri"
+    private const val firstLaunchDate = "first_launch_date"
+    private const val isAppFullVersionEnabled = "is_full_version_enabled"
     const val sortStyle = "sort_style"
     const val isSortingReversed = "is_sorting_reversed"
     const val listAppsCategory = "list_apps_category"
@@ -30,10 +32,14 @@ object MainPreferences {
         return getSharedPreferences().getInt(launchCount, 0)
     }
 
+    fun incrementLaunchCount() {
+        setLaunchCount(getLaunchCount() + 1)
+    }
+
     // ---------------------------------------------------------------------------------------------------------- //
 
     // Day/Night Auto
-    fun setDayNight(@NotNull value: Boolean) {
+    fun setDayNight(value: Boolean) {
         getSharedPreferences().edit().putBoolean(dayNightMode, value).apply()
     }
 
@@ -43,7 +49,7 @@ object MainPreferences {
 
     // ---------------------------------------------------------------------------------------------------------- //
 
-    fun setAppLanguage(@NonNull locale: String) {
+    fun setAppLanguage(locale: String) {
         getSharedPreferences().edit().putString(appLanguage, locale).apply()
     }
 
@@ -53,7 +59,7 @@ object MainPreferences {
 
     // ---------------------------------------------------------------------------------------------------------- //
 
-    fun setSortStyle(@NonNull style: String) {
+    fun setSortStyle(style: String) {
         getSharedPreferences().edit().putString(sortStyle, style).apply()
     }
 
@@ -63,7 +69,7 @@ object MainPreferences {
 
     // ---------------------------------------------------------------------------------------------------------- //
 
-    fun setReverseSorting(@NotNull value: Boolean) {
+    fun setReverseSorting(value: Boolean) {
         getSharedPreferences().edit().putBoolean(isSortingReversed, value).apply()
     }
 
@@ -73,7 +79,7 @@ object MainPreferences {
 
     // ---------------------------------------------------------------------------------------------------------- //
 
-    fun setAppsCategory(@NonNull category: String) {
+    fun setAppsCategory(category: String) {
         getSharedPreferences().edit().putString(listAppsCategory, category).apply()
     }
 
@@ -83,11 +89,42 @@ object MainPreferences {
 
     // ---------------------------------------------------------------------------------------------------------- //
 
-    fun setStoragePermissionUri(@NonNull uri: Uri) {
-        getSharedPreferences().edit().putString(storagePermissionUri, uri.toString()).apply()
+    fun setFullVersion(value: Boolean): Boolean {
+        return getSharedPreferences().edit().putBoolean(isAppFullVersionEnabled, value).commit()
     }
 
-    fun getStoragePermissionUri(): String? {
-        return getSharedPreferences().getString(storagePermissionUri, null)
+    fun isAppFullVersionEnabled(): Boolean {
+        return getSharedPreferences().getBoolean(isAppFullVersionEnabled, false) ||
+                CalendarUtils.getDaysBetweenTwoDates(Date(getFirstLaunchDate()), CalendarUtils.getToday()) <= MAX_TRIAL_DAYS
+    }
+
+    fun isWithinTrialPeriod(): Boolean {
+        return CalendarUtils.getDaysBetweenTwoDates(Date(getFirstLaunchDate()), CalendarUtils.getToday()) <= MAX_TRIAL_DAYS
+    }
+
+    fun isTrialWithoutFull(): Boolean {
+        return CalendarUtils.getDaysBetweenTwoDates(Date(getFirstLaunchDate()), CalendarUtils.getToday()) <= MAX_TRIAL_DAYS
+                && !isAppFullVersionEnabled()
+    }
+
+    fun isFullVersion(): Boolean {
+        return getSharedPreferences().getBoolean(isAppFullVersionEnabled, false)
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- //
+
+    fun setFirstLaunchDate(value: Long) {
+        getSharedPreferences().edit().putLong(firstLaunchDate, value).apply()
+    }
+
+    fun getFirstLaunchDate(): Long {
+        return getSharedPreferences().getLong(firstLaunchDate, -1)
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- //
+
+    fun getDaysLeft(): Int {
+        return (MAX_TRIAL_DAYS - CalendarUtils.getDaysBetweenTwoDates(Date(getFirstLaunchDate()), CalendarUtils.getToday()))
+            .coerceAtLeast(0)
     }
 }

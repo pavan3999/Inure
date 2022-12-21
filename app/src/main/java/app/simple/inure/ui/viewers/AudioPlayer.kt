@@ -1,10 +1,10 @@
 package app.simple.inure.ui.viewers
 
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.*
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.LayoutInflater
@@ -14,8 +14,6 @@ import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.SeekBar
-import androidx.core.content.res.ResourcesCompat
-import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import app.simple.inure.R
 import app.simple.inure.constants.ServiceConstants
@@ -23,16 +21,19 @@ import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.theme.ThemeMaterialCardView
 import app.simple.inure.decorations.theme.ThemeSeekBar
 import app.simple.inure.decorations.typeface.TypeFaceTextView
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.decorations.views.CustomProgressBar
+import app.simple.inure.dialogs.miscellaneous.Error.Companion.showError
+import app.simple.inure.extensions.fragments.ScopedAudioPlayerDialogFragment
 import app.simple.inure.glide.util.AudioCoverUtil.loadFromFileDescriptor
 import app.simple.inure.preferences.AppearancePreferences
 import app.simple.inure.services.AudioService
 import app.simple.inure.util.FileUtils.getMimeType
+import app.simple.inure.util.IntentHelper
 import app.simple.inure.util.NumberUtils
 import app.simple.inure.util.ViewUtils
+import app.simple.inure.util.ViewUtils.gone
 
-class AudioPlayer : ScopedBottomSheetFragment() {
+class AudioPlayer : ScopedAudioPlayerDialogFragment() {
 
     private lateinit var art: ImageView
     private lateinit var playPause: DynamicRippleImageButton
@@ -45,8 +46,8 @@ class AudioPlayer : ScopedBottomSheetFragment() {
     private lateinit var fileInfo: TypeFaceTextView
     private lateinit var playerContainer: ThemeMaterialCardView
     private lateinit var seekBar: ThemeSeekBar
+    private lateinit var loader: CustomProgressBar
 
-    private var animation: ObjectAnimator? = null
     private var uri: Uri? = null
     private var audioService: AudioService? = null
     private var serviceConnection: ServiceConnection? = null
@@ -54,6 +55,7 @@ class AudioPlayer : ScopedBottomSheetFragment() {
 
     private val audioIntentFilter = IntentFilter()
     private var serviceBound = false
+    private var wasSongPlaying = false
 
     /**
      * [currentPosition] will keep the current position of the playback
@@ -79,14 +81,22 @@ class AudioPlayer : ScopedBottomSheetFragment() {
         artist = view.findViewById(R.id.mime_artist)
         album = view.findViewById(R.id.mime_album)
         seekBar = view.findViewById(R.id.seekbar_mime)
+        loader = view.findViewById(R.id.loader)
         playerContainer = view.findViewById(R.id.container)
 
-        uri = requireArguments().getParcelable("uri")!!
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            uri = requireArguments().getParcelable("uri", Uri::class.java)!!
+        } else {
+            @Suppress("DEPRECATION")
+            uri = requireArguments().getParcelable("uri")!!
+        }
+
         audioIntentFilter.addAction(ServiceConstants.actionPrepared)
-        audioIntentFilter.addAction(ServiceConstants.actionQuitService)
+        audioIntentFilter.addAction(ServiceConstants.actionQuitMusicService)
         audioIntentFilter.addAction(ServiceConstants.actionMetaData)
         audioIntentFilter.addAction(ServiceConstants.actionPause)
         audioIntentFilter.addAction(ServiceConstants.actionPlay)
+        audioIntentFilter.addAction(ServiceConstants.actionBuffering)
 
         return view
     }
@@ -98,24 +108,25 @@ class AudioPlayer : ScopedBottomSheetFragment() {
         playerContainer.radius = AppearancePreferences.getCornerRadius()
         ViewUtils.addShadow(playerContainer)
 
+        playerContainer.isEnabled = false
+        playPause.isEnabled = false
+
         serviceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                if (uri?.getMimeType(requireContext())?.contains("audio")!! || uri?.getMimeType(requireContext())?.contains("video")!!) {
-                    serviceBound = true
-                    audioService = (service as AudioService.AudioBinder).getService()
-                    audioService?.audioUri = uri
-                } else {
-                    kotlin.runCatching {
+                kotlin.runCatching {
+                    if ((uri?.getMimeType(requireContext())?.startsWith("audio") == true
+                                || uri?.getMimeType(requireContext())?.startsWith("video") == true)
+                        || uri?.toString()?.startsWith("http") == true
+                        || uri?.toString()?.startsWith("ftp") == true) {
+                        serviceBound = true
+                        audioService = (service as AudioService.AudioBinder).getService()
+                        audioService?.audioUri = uri
+                    } else {
                         throw IllegalArgumentException("File is not media type or incompatible")
-                    }.getOrElse {
-                        val e = Error.newInstance(it.stackTraceToString())
-                        e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                            override fun onDismiss() {
-                                dismiss()
-                            }
-                        })
-                        e.show(childFragmentManager, "error")
                     }
+                }.getOrElse {
+                    it.printStackTrace()
+                    showError(it.stackTraceToString())
                 }
             }
 
@@ -139,10 +150,22 @@ class AudioPlayer : ScopedBottomSheetFragment() {
                         album.text = audioService?.metaData?.album
                         fileInfo.text = getString(R.string.audio_file_info, audioService?.metaData?.format, audioService?.metaData?.sampling, audioService?.metaData?.bitrate)
                         art.loadFromFileDescriptor(uri!!)
+                        loader.gone(animate = true)
+                        playerContainer.isEnabled = true
+                        playPause.isEnabled = true
+                        wasSongPlaying = true
                     }
-                    ServiceConstants.actionQuitService -> {
-                        requireContext().unbindService(serviceConnection!!)
-                        requireActivity().finishAfterTransition()
+                    ServiceConstants.actionQuitMusicService -> {
+                        if (wasSongPlaying) {
+                            requireActivity().finish()
+                        } else {
+                            kotlin.runCatching {
+                                throw IllegalStateException("Service closed unexpectedly on uri: ${uri.toString()}")
+                            }.getOrElse {
+                                it.printStackTrace()
+                                showError(it.stackTraceToString())
+                            }
+                        }
                     }
                     ServiceConstants.actionPlay -> {
                         buttonStatus(true)
@@ -150,14 +173,13 @@ class AudioPlayer : ScopedBottomSheetFragment() {
                     ServiceConstants.actionPause -> {
                         buttonStatus(false)
                     }
+                    ServiceConstants.actionBuffering -> {
+                        seekBar.updateSecondaryProgress(intent.extras?.getInt(IntentHelper.INT_EXTRA)!!)
+                    }
                     ServiceConstants.actionMediaError -> {
-                        val e = Error.newInstance(intent.extras?.getString("stringExtra", "unknown_media_playback_error")!!)
-                        e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                            override fun onDismiss() {
-                                stopService()
-                            }
-                        })
-                        e.show(childFragmentManager, "error")
+                        childFragmentManager.showError(intent.extras?.getString("stringExtra", "unknown_media_playback_error")!!).setOnErrorCallbackListener {
+                            stopService()
+                        }
                     }
                 }
             }
@@ -180,7 +202,9 @@ class AudioPlayer : ScopedBottomSheetFragment() {
                         .start()
 
                     kotlin.runCatching {
-                        (art.drawable as AnimatedVectorDrawable).start()
+                        if (art.drawable is AnimatedVectorDrawable) {
+                            (art.drawable as AnimatedVectorDrawable).start()
+                        }
                     }.getOrElse {
                         it.printStackTrace()
                     }
@@ -198,8 +222,8 @@ class AudioPlayer : ScopedBottomSheetFragment() {
                 }
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                animation?.cancel()
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                this@AudioPlayer.seekBar.clearAnimation()
                 handler.removeCallbacks(progressRunnable)
             }
 
@@ -224,18 +248,11 @@ class AudioPlayer : ScopedBottomSheetFragment() {
         }
     }
 
-    private fun setSeekbarProgress(seekbarProgress: Int) {
-        animation = ObjectAnimator.ofInt(seekBar, "progress", seekbarProgress)
-        animation!!.duration = 500L
-        animation!!.interpolator = LinearOutSlowInInterpolator()
-        animation!!.start()
-    }
-
     private fun buttonStatus(isPlaying: Boolean) {
         if (isPlaying) {
-            playPause.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_pause, requireContext().theme))
+            playPause.setIcon(R.drawable.ic_pause, true)
         } else {
-            playPause.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_play, requireContext().theme))
+            playPause.setIcon(R.drawable.ic_play, true)
         }
     }
 
@@ -243,12 +260,13 @@ class AudioPlayer : ScopedBottomSheetFragment() {
         serviceBound = false
         requireContext().unbindService(serviceConnection!!)
         requireContext().stopService(Intent(requireContext(), AudioService::class.java))
+        requireActivity().finish()
     }
 
     private val progressRunnable: Runnable = object : Runnable {
         override fun run() {
             currentPosition = audioService?.getProgress()!!
-            setSeekbarProgress(currentPosition)
+            seekBar.updateProgress(currentPosition)
             progress.text = NumberUtils.getFormattedTime(currentPosition.toLong())
             handler.postDelayed(this, 1000L)
         }
@@ -276,8 +294,12 @@ class AudioPlayer : ScopedBottomSheetFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        requireActivity().finish()
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(audioBroadcastReceiver!!)
+    }
+
+    override fun onCancel(dialog: DialogInterface) {
+        super.onCancel(dialog)
+        requireActivity().finish()
     }
 
     companion object {

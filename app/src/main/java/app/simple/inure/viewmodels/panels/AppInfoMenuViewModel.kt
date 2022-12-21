@@ -8,8 +8,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import app.simple.inure.R
 import app.simple.inure.apk.utils.PackageUtils
-import app.simple.inure.extension.viewmodels.WrappedViewModel
+import app.simple.inure.apk.utils.PackageUtils.getApplicationInfo
+import app.simple.inure.apk.utils.PackageUtils.isPackageInstalled
+import app.simple.inure.extensions.viewmodels.WrappedViewModel
 import app.simple.inure.preferences.ConfigurationPreferences
+import app.simple.inure.util.ConditionUtils.invert
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -32,10 +35,6 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
         }
     }
 
-    private val error: MutableLiveData<String> by lazy {
-        MutableLiveData<String>()
-    }
-
     fun getMenuItems(): LiveData<List<Pair<Int, Int>>> {
         return menuItems
     }
@@ -48,14 +47,10 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
         return miscellaneousItems
     }
 
-    fun getError(): LiveData<String> {
-        return error
-    }
-
     fun loadActionOptions() {
         viewModelScope.launch(Dispatchers.Default) {
-            if (!PackageUtils.isPackageInstalled(packageInfo.packageName, context.packageManager)) {
-                error.postValue(context.getString(R.string.app_not_installed, packageInfo.packageName))
+            if (!packageManager.isPackageInstalled(packageInfo.packageName)) {
+                warning.postValue(context.getString(R.string.app_not_installed, packageInfo.packageName))
                 return@launch
             }
 
@@ -71,7 +66,7 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
                 if (isNotThisApp()) {
                     list.add(Pair(R.drawable.ic_delete, R.string.uninstall))
 
-                    if (getApplication<Application>().packageManager.getApplicationInfo(packageInfo.packageName, 0).enabled) {
+                    if (packageManager.getApplicationInfo(packageInfo.packageName)!!.enabled) {
                         list.add(Pair(R.drawable.ic_disable, R.string.disable))
                     } else {
                         list.add(Pair(R.drawable.ic_check, R.string.enable))
@@ -79,11 +74,10 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
 
                     list.add(Pair(R.drawable.ic_close, R.string.force_stop))
                     list.add(Pair(R.drawable.ic_delete_sweep, R.string.clear_data))
-                    list.add(Pair(R.drawable.ic_broom, R.string.clear_cache))
+                    // list.add(Pair(R.drawable.ic_broom, R.string.clear_cache))
                 }
 
                 list.add(Pair(R.drawable.ic_double_arrow, R.string.open_in_settings))
-
             } else {
                 if (packageInfo.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
                     if (PackageUtils.checkIfAppIsLaunchable(getApplication(), packageInfo.packageName) && isNotThisApp()) {
@@ -105,6 +99,10 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
                 list.add(Pair(R.drawable.ic_double_arrow, R.string.open_in_settings))
             }
 
+            if (isNotThisApp().invert()) {
+                list.add(Pair(R.drawable.ic_change_history, R.string.change_logs))
+            }
+
             menuOptions.postValue(list)
         }
     }
@@ -112,7 +110,7 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
     fun loadMetaOptions() {
         viewModelScope.launch(Dispatchers.Default) {
 
-            val list = listOf(
+            val list = mutableListOf(
                     Pair(R.drawable.ic_permission, R.string.permissions),
                     Pair(R.drawable.ic_activities, R.string.activities),
                     Pair(R.drawable.ic_services, R.string.services),
@@ -129,6 +127,11 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
                     Pair(R.drawable.ic_radiation_nuclear, R.string.trackers)
             )
 
+            if (ConfigurationPreferences.isUsingRoot()) {
+                list.add(1, Pair(R.drawable.ic_rocket_launch, R.string.operations))
+                list.add(Pair(R.drawable.sc_preferences, R.string.shared_prefs))
+            }
+
             menuItems.postValue(list)
         }
     }
@@ -138,18 +141,9 @@ class AppInfoMenuViewModel(application: Application, val packageInfo: PackageInf
             val list = arrayListOf<Pair<Int, Int>>()
 
             list.add(Pair(R.drawable.ic_downloading, R.string.extract))
-
-            if (PackageUtils.isPackageInstalled("com.android.vending", getApplication<Application>().packageManager)) {
-                list.add(Pair(R.drawable.ic_play_store, R.string.play_store))
-            }
-
-            if (PackageUtils.isPackageInstalled("com.amazon.venezia", getApplication<Application>().packageManager)) {
-                list.add(Pair(R.drawable.ic_amazon, R.string.amazon))
-            }
-
-            if (PackageUtils.isPackageInstalled("org.fdroid.fdroid", getApplication<Application>().packageManager)) {
-                list.add(Pair(R.drawable.ic_fdroid, R.string.fdroid))
-            }
+            list.add(Pair(R.drawable.ic_play_store, R.string.play_store))
+            list.add(Pair(R.drawable.ic_amazon, R.string.amazon))
+            list.add(Pair(R.drawable.ic_fdroid, R.string.fdroid))
 
             miscellaneousItems.postValue(list)
         }

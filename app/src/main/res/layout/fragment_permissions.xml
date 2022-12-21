@@ -39,6 +39,9 @@
             android:layout_marginStart="16dp"
             android:layout_weight="1"
             android:text="@string/permissions"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:textSize="@dimen/header_font_size"
             app:appFontStyle="bold"
             app:textColorStyle="accent" />
@@ -60,7 +63,7 @@
             android:src="@drawable/ic_search"
             app:buttonTintType="accent" />
 
-        <app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+        <app.simple.inure.decorations.corners.DynamicCornerEditText
             android:id="@+id/permissions_search"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -78,6 +81,7 @@
 
     <app.simple.inure.decorations.theme.ThemeDivider
         android:layout_width="match_parent"
+        android:translationZ="1dp"
         android:layout_height="1px" />
 
     <app.simple.inure.decorations.overscroll.CustomVerticalRecyclerView

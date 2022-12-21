@@ -10,7 +10,7 @@ import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.LoaderImageView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.factories.actions.ComponentStateFactory
 import app.simple.inure.viewmodels.dialogs.ComponentStateViewModel
 
@@ -32,11 +32,10 @@ class ComponentState : ScopedBottomSheetFragment() {
         loader = view.findViewById(R.id.loader)
         status = view.findViewById(R.id.component_state_result)
 
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
         packageId = requireArguments().getString(BundleConstants.packageId)!!
         mode = requireArguments().getBoolean(BundleConstants.componentMode)
 
-        componentStateFactory = ComponentStateFactory(requireActivity().application, packageInfo, packageId!!, mode!!)
+        componentStateFactory = ComponentStateFactory(packageInfo, packageId!!, mode!!)
         componentStateViewModel = ViewModelProvider(this, componentStateFactory).get(ComponentStateViewModel::class.java)
 
         return view
@@ -45,7 +44,7 @@ class ComponentState : ScopedBottomSheetFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        componentStateViewModel.getSuccessStatus().observe(viewLifecycleOwner, {
+        componentStateViewModel.getSuccessStatus().observe(viewLifecycleOwner) {
             when (it) {
                 "Done" -> {
                     loader.loaded()
@@ -63,7 +62,7 @@ class ComponentState : ScopedBottomSheetFragment() {
                     status.setText(R.string.failed)
                 }
             }
-        })
+        }
     }
 
     fun setOnComponentStateChangeListener(componentStatusCallbacks: ComponentStatusCallbacks) {

@@ -10,23 +10,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.lifecycle.ViewModelProvider
 import app.simple.inure.R
 import app.simple.inure.constants.BundleConstants
+import app.simple.inure.constants.MimeConstants
 import app.simple.inure.decorations.fastscroll.FastScrollerBuilder
 import app.simple.inure.decorations.padding.PaddingAwareNestedScrollView
 import app.simple.inure.decorations.ripple.DynamicRippleImageButton
 import app.simple.inure.decorations.typeface.TypeFaceTextView
 import app.simple.inure.decorations.views.XmlWebView
-import app.simple.inure.dialogs.miscellaneous.Error
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedFragment
 import app.simple.inure.factories.panels.TextViewViewModelFactory
 import app.simple.inure.popups.app.PopupXmlViewer
 import app.simple.inure.viewmodels.viewers.TextViewerViewModel
-import kotlinx.coroutines.*
 import java.io.IOException
-import java.util.*
 
 class HtmlViewer : ScopedFragment() {
 
@@ -40,7 +38,7 @@ class HtmlViewer : ScopedFragment() {
 
     private var htmlTxt: String = ""
 
-    private val exportText = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri: Uri? ->
+    private val exportText = registerForActivityResult(CreateDocument(MimeConstants.htmlType)) { uri: Uri? ->
         if (uri == null) {
             // Back button pressed.
             return@registerForActivityResult
@@ -65,15 +63,13 @@ class HtmlViewer : ScopedFragment() {
         html = view.findViewById(R.id.html_viewer)
         path = view.findViewById(R.id.html_name)
         options = view.findViewById(R.id.html_viewer_options)
-        packageInfo = requireArguments().getParcelable(BundleConstants.packageInfo)!!
 
         textViewViewModelFactory = TextViewViewModelFactory(
                 packageInfo,
                 requireArguments().getString("path")!!,
-                requireActivity().application,
         )
 
-        textViewerViewModel = ViewModelProvider(this, textViewViewModelFactory).get(TextViewerViewModel::class.java)
+        textViewerViewModel = ViewModelProvider(this, textViewViewModelFactory)[TextViewerViewModel::class.java]
 
         path.text = requireArguments().getString("path")!!
 
@@ -87,20 +83,14 @@ class HtmlViewer : ScopedFragment() {
 
         startPostponedEnterTransition()
 
-        textViewerViewModel.getText().observe(viewLifecycleOwner, {
+        textViewerViewModel.getText().observe(viewLifecycleOwner) {
             runCatching {
                 htmlTxt = it
                 html.loadData(it, "text/html", "UTF-8")
             }.getOrElse {
-                val e = Error.newInstance(it.message!!)
-                e.show(childFragmentManager, "error_dialog")
-                e.setOnErrorDialogCallbackListener(object : Error.Companion.ErrorDialogCallbacks {
-                    override fun onDismiss() {
-                        requireActivity().onBackPressed()
-                    }
-                })
+                showError(it.stackTraceToString())
             }
-        })
+        }
 
         options.setOnClickListener {
             val p = PopupXmlViewer(it)

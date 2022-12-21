@@ -19,14 +19,14 @@
         android:padding="@dimen/header_padding"
         android:translationZ="1dp">
 
-        <ImageView
+        <app.simple.inure.decorations.theme.ThemeIcon
             android:id="@+id/imageView8"
             android:layout_width="@dimen/header_icon_size"
             android:layout_height="@dimen/header_icon_size"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_resources"
             android:transitionName="@string/resources"
-            app:tint="?attr/colorAppAccent"
+            app:tintType="accent"
             tools:ignore="ContentDescription" />
 
         <app.simple.inure.decorations.typeface.TypeFaceTextView
@@ -37,9 +37,9 @@
             android:layout_marginStart="16dp"
             android:layout_weight="1"
             android:text="@string/resources"
-            app:textColorStyle="accent"
             android:textSize="@dimen/header_font_size"
-            app:appFontStyle="bold" />
+            app:appFontStyle="bold"
+            app:textColorStyle="accent" />
 
         <app.simple.inure.decorations.ripple.DynamicRippleImageButton
             android:id="@+id/resources_option_btn"
@@ -59,7 +59,7 @@
             android:src="@drawable/ic_search"
             app:buttonTintType="accent" />
 
-        <app.simple.inure.decorations.typeface.TypeFaceEditTextDynamicCorner
+        <app.simple.inure.decorations.corners.DynamicCornerEditText
             android:id="@+id/resources_search"
             android:layout_width="0dp"
             android:layout_height="match_parent"

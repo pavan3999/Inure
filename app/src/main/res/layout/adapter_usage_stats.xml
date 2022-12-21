@@ -5,10 +5,10 @@
     android:id="@+id/adapter_usage_stats_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="5dp"
-    android:padding="@dimen/popup_padding">
+    android:layout_margin="@dimen/popup_padding"
+    android:padding="5dp">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icon"
         android:layout_width="@dimen/app_icon_dimension"
         android:layout_height="@dimen/app_icon_dimension"
@@ -45,7 +45,7 @@
         app:layout_constraintTop_toBottomOf="@+id/name"
         app:textColorStyle="accent" />
 
-    <ImageView
+    <app.simple.inure.decorations.theme.ThemeIcon
         android:id="@+id/signal_icon"
         android:layout_width="12dp"
         android:layout_height="12dp"
@@ -54,7 +54,7 @@
         app:layout_constraintEnd_toStartOf="@id/total_data_up_used"
         app:layout_constraintStart_toStartOf="@id/total_time_used"
         app:layout_constraintTop_toTopOf="@id/total_data_up_used"
-        app:tint="?attr/colorAppAccent"
+        app:tintType="accent"
         tools:ignore="ContentDescription" />
 
     <app.simple.inure.decorations.typeface.TypeFaceTextView
@@ -68,6 +68,7 @@
         android:gravity="center_vertical"
         android:textSize="@dimen/app_package_text_size"
         app:appFontStyle="regular"
+        android:maxWidth="100dp"
         app:drawableTintStyle="secondary"
         app:layout_constraintBottom_toTopOf="@id/total_wifi_up_used"
         app:layout_constraintEnd_toStartOf="@id/total_data_down_used"
@@ -85,6 +86,7 @@
         android:drawablePadding="@dimen/popup_padding"
         android:gravity="center_vertical"
         android:textSize="@dimen/app_package_text_size"
+        android:maxWidth="100dp"
         app:appFontStyle="regular"
         app:drawableTintStyle="secondary"
         app:layout_constraintBottom_toBottomOf="@+id/total_data_up_used"
@@ -93,7 +95,7 @@
         app:layout_constraintTop_toTopOf="@+id/total_data_up_used"
         app:textColorStyle="tertiary" />
 
-    <ImageView
+    <app.simple.inure.decorations.theme.ThemeIcon
         android:id="@+id/wifi_icon"
         android:layout_width="12dp"
         android:layout_height="12dp"
@@ -102,7 +104,7 @@
         app:layout_constraintEnd_toStartOf="@id/total_wifi_up_used"
         app:layout_constraintStart_toStartOf="@id/signal_icon"
         app:layout_constraintTop_toTopOf="@+id/total_wifi_up_used"
-        app:tint="?attr/colorAppAccent"
+        app:tintType="accent"
         tools:ignore="ContentDescription" />
 
     <app.simple.inure.decorations.typeface.TypeFaceTextView
@@ -116,6 +118,7 @@
         android:gravity="center_vertical"
         android:textSize="@dimen/app_package_text_size"
         app:appFontStyle="regular"
+        android:maxWidth="100dp"
         app:drawableTintStyle="secondary"
         app:layout_constraintBottom_toBottomOf="@+id/icon"
         app:layout_constraintEnd_toStartOf="@id/total_wifi_down_used"
@@ -134,6 +137,7 @@
         android:gravity="center_vertical"
         android:textSize="@dimen/app_package_text_size"
         app:appFontStyle="regular"
+        android:maxWidth="100dp"
         app:drawableTintStyle="secondary"
         app:layout_constraintBottom_toBottomOf="@+id/total_wifi_up_used"
         app:layout_constraintEnd_toEndOf="parent"

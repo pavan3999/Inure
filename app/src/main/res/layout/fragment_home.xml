@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
     android:clipChildren="false"
     android:clipToPadding="false"
     android:orientation="vertical">
@@ -12,32 +11,45 @@
         android:id="@+id/home_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/white"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:padding="@dimen/popup_padding"
         android:translationZ="1dp">
 
-        <ImageView
+        <app.simple.inure.decorations.ripple.DynamicRippleImageButton
             android:id="@+id/header_icon"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:contentDescription="@string/app_name"
-            android:padding="10dp"
-            android:src="@drawable/ic_app_icon"
-            android:transitionName="main_app_icon" />
+            android:padding="5dp"
+            android:transitionName="main_app_icon"
+            app:buttonTintType="accent"
+            app:srcCompat="@drawable/ic_main_app_icon_big" />
 
         <app.simple.inure.decorations.typeface.TypeFaceTextView
             android:id="@+id/typeFaceTextView02"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginHorizontal="16dp"
+            android:layout_marginHorizontal="8dp"
             android:layout_weight="1"
             android:text="@string/app_name"
             android:textSize="@dimen/header_font_size"
-            app:appFontStyle="light"
+            app:appFontStyle="medium"
             app:textColorStyle="heading" />
+
+        <app.simple.inure.decorations.ripple.DynamicRippleImageButton
+            android:id="@+id/home_purchase"
+            android:layout_width="@dimen/button_size"
+            android:layout_height="@dimen/button_size"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
+            android:contentDescription="@string/search_button"
+            android:src="@drawable/ic_sell_black"
+            android:transitionName="adapter_search_icon"
+            app:buttonTintType="accent" />
 
         <app.simple.inure.decorations.ripple.DynamicRippleImageButton
             android:id="@+id/home_header_search_button"
@@ -58,6 +70,7 @@
             android:layout_marginEnd="8dp"
             android:contentDescription="@string/configuration_button"
             android:src="@drawable/ic_settings"
+            android:transitionName="@string/preferences"
             app:buttonTintType="regular" />
 
         <app.simple.inure.decorations.ripple.DynamicRippleImageButton
@@ -79,7 +92,7 @@
         android:clipChildren="false"
         android:clipToPadding="false">
 
-        <androidx.core.widget.NestedScrollView
+        <app.simple.inure.decorations.edgeeffect.EdgeEffectNestedScrollView
             android:id="@+id/home_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -105,31 +118,6 @@
                     android:layout_height="wrap_content"
                     android:overScrollMode="never" />
 
-                <app.simple.inure.decorations.theme.ThemeDivider
-                    android:layout_width="match_parent"
-                    android:layout_height="1px"
-                    android:layout_margin="10dp" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/apps_categories"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:overScrollMode="never" />
-
-                <app.simple.inure.decorations.ripple.DynamicRippleTextView
-                    android:id="@+id/quick_apps_tv"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="@dimen/popup_padding"
-                    android:layout_marginTop="@dimen/popup_padding"
-                    android:paddingHorizontal="@dimen/dialog_padding"
-                    android:paddingVertical="@dimen/header_padding"
-                    android:text="@string/quick_apps"
-                    android:textSize="@dimen/home_heading_text_size"
-                    android:visibility="gone"
-                    app:appFontStyle="bold"
-                    app:textColorStyle="primary" />
-
                 <app.simple.inure.decorations.overscroll.CustomHorizontalRecyclerView
                     android:id="@+id/quick_app_recycler_view"
                     android:layout_width="match_parent"
@@ -139,10 +127,11 @@
                     android:layoutAnimation="@anim/horizontal_list_controller"
                     android:nestedScrollingEnabled="false"
                     android:paddingHorizontal="@dimen/dialog_padding"
+                    android:paddingVertical="@dimen/popup_padding"
                     android:visibility="gone"
                     app:statusBarPaddingRequired="false" />
 
             </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
+        </app.simple.inure.decorations.edgeeffect.EdgeEffectNestedScrollView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </app.simple.inure.decorations.theme.ThemeLinearLayout>

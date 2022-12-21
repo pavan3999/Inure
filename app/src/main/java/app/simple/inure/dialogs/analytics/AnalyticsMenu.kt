@@ -7,12 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import app.simple.inure.R
 import app.simple.inure.decorations.ripple.DynamicRippleTextView
-import app.simple.inure.extension.fragments.ScopedBottomSheetFragment
-import app.simple.inure.extension.fragments.ScopedFragment
+import app.simple.inure.extensions.fragments.ScopedBottomSheetFragment
 import app.simple.inure.popups.analytics.PopupSdkValue
 import app.simple.inure.preferences.AnalyticsPreferences
-import app.simple.inure.ui.panels.Preferences
-import app.simple.inure.util.FragmentHelper
 
 class AnalyticsMenu : ScopedBottomSheetFragment() {
 
@@ -21,7 +18,7 @@ class AnalyticsMenu : ScopedBottomSheetFragment() {
     private lateinit var settings: DynamicRippleTextView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.dialog_analytics_menu, container, false)
+        val view = inflater.inflate(R.layout.dialog_menu_analytics, container, false)
 
         sdkValue = view.findViewById(R.id.sdk_value)
         pieHoleRadius = view.findViewById(R.id.dialog_open_pie_hole)
@@ -47,10 +44,7 @@ class AnalyticsMenu : ScopedBottomSheetFragment() {
         }
 
         settings.setOnClickListener {
-            (parentFragment as ScopedFragment).clearExitTransition()
-            FragmentHelper.openFragment(requireActivity().supportFragmentManager,
-                                        Preferences.newInstance(),
-                                        "preferences_screen")
+            openSettings()
         }
     }
 
